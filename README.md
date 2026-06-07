@@ -1,6 +1,6 @@
 # XingAI Enterprise AI POCs
 
-**Version:** 0.1.1
+**Version:** 0.1.2
 
 Runnable proof-of-concept projects for enterprise AI decision systems and architecture patterns.
 
@@ -41,6 +41,7 @@ shared/
   schemas/
   docker/
 docs/
+  CONTRIBUTING.md
   POC-STANDARDS.md
 ```
 
@@ -55,7 +56,16 @@ Every POC should answer four questions:
 
 See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md).
 
+## Contributing
+
+See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for contribution guidelines.
+
 ## Version Notes
+
+### 0.1.2
+
+- Add contribution guidelines for new POCs
+- Require contributors to update POC index, version notes, and bilingual design references
 
 ### 0.1.1
 
