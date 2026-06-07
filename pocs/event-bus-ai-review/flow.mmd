@@ -1,0 +1,9 @@
+flowchart LR
+    UserAction["User or business event"] --> EventBus["Event bus"]
+    EventBus --> AIReview["AI review worker"]
+    EventBus --> Compliance["Compliance checker"]
+    AIReview --> DecisionPacket["Decision packet"]
+    Compliance --> DecisionPacket
+    DecisionPacket --> HumanApproval["Human approval"]
+    HumanApproval --> AuditLog["Audit log"]
+    HumanApproval --> Result["Final decision"]
