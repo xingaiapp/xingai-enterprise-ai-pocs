@@ -1,6 +1,6 @@
 # XingAI Enterprise AI POCs
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 
 Runnable proof-of-concept projects for enterprise AI decision systems and architecture patterns.
 
@@ -51,11 +51,16 @@ Every POC should answer four questions:
 1. What architecture pattern does this prove?
 2. What is intentionally missing because this is not production?
 3. What did we learn from building it?
-4. Which design article or ADR does it support?
+4. Which English and Chinese design docs does it support?
 
 See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md).
 
 ## Version Notes
+
+### 0.1.1
+
+- Require every POC to reference matching `xingai-enterprise-ai-design` docs in both English and Chinese when available
+- Update the Event Bus AI Review placeholder with bilingual design links
 
 ### 0.1.0
 
