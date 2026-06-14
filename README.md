@@ -1,6 +1,6 @@
 # XingAI Enterprise AI POCs
 
-**Version:** 0.1.2
+**Version:** 0.1.4
 
 Runnable proof-of-concept projects for enterprise AI decision systems and architecture patterns.
 
@@ -24,6 +24,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 
 | POC | Pattern | Status | Related Design Topic |
 |---|---|---|---|
+| [Multi-Agent Lab](pocs/multi-agent-lab/) | Orchestrator + specialist handoffs | Runnable · Phase 1 MVP | [Enterprise Agent Platform](docs/ENTERPRISE-AGENT-PLATFORM.md) |
 | Event Bus AI Review | Event-driven AI decisions | Planned | Enterprise AI decision systems |
 | Human-in-the-Loop Decision | Approval workflow | Planned | Human approval layers |
 | Memory Layer Demo | User + organization memory | Planned | Memory architectures |
@@ -33,6 +34,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 
 ```text
 pocs/
+  multi-agent-lab/
   event-bus-ai-review/
   human-in-the-loop-decision/
   memory-layer-demo/
@@ -41,6 +43,8 @@ shared/
   schemas/
   docker/
 docs/
+  ENTERPRISE-AGENT-PLATFORM.md
+  ENTERPRISE-AGENT-PLATFORM.zh.md
   CONTRIBUTING.md
   POC-STANDARDS.md
 ```
@@ -61,6 +65,17 @@ See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md).
 See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for contribution guidelines.
 
 ## Version Notes
+
+### 0.1.4
+
+- Position Multi-Agent Lab as **Phase 1 MVP Validation Layer** for Enterprise Agent Platform
+- Add enterprise architecture docs (EN + 中文)
+- Upgrade demo UI to enterprise workspace layout with agent registry and metrics
+
+### 0.1.3
+
+- Add runnable **Multi-Agent Lab** POC (`pocs/multi-agent-lab/`)
+- FastAPI demo with Orchestrator + Research/Product/Tech/Critic agents and SQLite trace timeline
 
 ### 0.1.2
 

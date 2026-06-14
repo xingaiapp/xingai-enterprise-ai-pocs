@@ -1,0 +1,15 @@
+flowchart TD
+    User["User input"] --> Orchestrator1["Orchestrator Agent\nplan handoffs"]
+    Orchestrator1 --> Research["Research Agent\nfake_research_tool + cache"]
+    Research --> Product["Product Agent\nproduct concept + MVP"]
+    Product --> Tech["Tech Agent\narchitecture"]
+    Tech --> Critic["Critic Agent\nrisks + mitigation"]
+    Critic --> Orchestrator2["Orchestrator Agent\nsynthesize final answer"]
+    Orchestrator2 --> Final["Final Answer\n6 sections"]
+    Orchestrator1 --> Trace["SQLite trace_logs"]
+    Research --> Trace
+    Product --> Trace
+    Tech --> Trace
+    Critic --> Trace
+    Orchestrator2 --> Trace
+    Trace --> UI["Demo UI timeline"]

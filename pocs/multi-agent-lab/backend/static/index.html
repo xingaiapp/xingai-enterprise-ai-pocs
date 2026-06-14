@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XingAI Enterprise Agent Platform</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0c10;
+      --sidebar: #0f1218;
+      --surface: #151922;
+      --surface2: #1a1f2b;
+      --border: #2a3142;
+      --text: #eef0f4;
+      --muted: #8b95a8;
+      --accent: #3b82f6;
+      --accent2: #6366f1;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --purple: #a78bfa;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: ui-sans-serif, system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    .sidebar {
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .brand { padding: 0 18px 20px; border-bottom: 1px solid var(--border); }
+    .brand h1 { margin: 0; font-size: 0.95rem; line-height: 1.35; }
+    .brand p { margin: 6px 0 0; font-size: 0.72rem; color: var(--muted); }
+    .phase-badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      background: rgba(59,130,246,0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(59,130,246,0.3);
+    }
+    nav { flex: 1; padding: 16px 10px; overflow-y: auto; }
+    .nav-section { margin-bottom: 18px; }
+    .nav-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 0 8px 6px; }
+    .nav-item {
+      display: block;
+      padding: 8px 12px;
+      margin: 2px 0;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-decoration: none;
+      cursor: default;
+    }
+    .nav-item.active { background: rgba(59,130,246,0.15); color: #bfdbfe; }
+    .nav-item.future { opacity: 0.45; }
+    .nav-item small { float: right; font-size: 0.65rem; color: var(--amber); }
+    .main { display: flex; flex-direction: column; min-width: 0; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+    }
+    .topbar h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+    .topbar .sub { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+    .user { font-size: 0.8rem; color: var(--muted); text-align: right; }
+    .user strong { display: block; color: var(--text); }
+    .content { padding: 20px 24px 32px; flex: 1; overflow-y: auto; }
+    .request-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+    .request-card h3 { margin: 0 0 12px; font-size: 0.95rem; }
+    .request-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+    select, textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    select { padding: 10px 12px; min-width: 180px; }
+    textarea { flex: 1; min-width: 280px; min-height: 88px; padding: 12px; resize: vertical; width: 100%; }
+    .btn-run {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 22px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 1100px) { .workspace { grid-template-columns: 1fr; } }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .panel-head h3 { margin: 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .req-id { font-size: 0.72rem; color: var(--muted); font-family: monospace; }
+    .panel-body { padding: 14px 16px; flex: 1; overflow-y: auto; }
+    .timeline { display: flex; flex-direction: column; gap: 10px; }
+    .tl-item {
+      border-left: 3px solid var(--accent2);
+      padding-left: 12px;
+      cursor: pointer;
+    }
+    .tl-item:hover { background: rgba(255,255,255,0.02); }
+    .tl-item.selected { background: rgba(99,102,241,0.08); border-left-color: var(--purple); }
+    .tl-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .tl-name { font-size: 0.88rem; font-weight: 600; }
+    .badge {
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(34,197,94,0.15);
+      color: var(--green);
+    }
+    .tl-meta { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+    .tl-summary { font-size: 0.78rem; color: #c4cad6; margin-top: 6px; line-height: 1.4; }
+    .tabs { display: flex; gap: 4px; }
+    .tab {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .tab.active { background: rgba(59,130,246,0.12); color: #bfdbfe; border-color: rgba(59,130,246,0.25); }
+    .output pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.84rem;
+      line-height: 1.55;
+      margin: 0;
+    }
+    .empty { color: var(--muted); font-style: italic; font-size: 0.88rem; }
+    .trace-detail {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+    }
+    .trace-detail pre { font-size: 0.75rem; max-height: 180px; overflow-y: auto; }
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 1200px) { .bottom-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 700px) { .bottom-grid { grid-template-columns: 1fr; } }
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .info-card h4 { margin: 0 0 10px; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .flow {
+      font-size: 0.72rem;
+      line-height: 1.6;
+      color: #b8c0d0;
+      font-family: ui-monospace, monospace;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      font-size: 0.68rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .chip.active { border-color: rgba(34,197,94,0.4); color: #86efac; }
+    .chip.planned { opacity: 0.55; }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .metric {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+    .metric .val { font-size: 1.1rem; font-weight: 700; color: #bfdbfe; }
+    .metric .lbl { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+    .error { color: #f87171; font-size: 0.85rem; margin-top: 10px; }
+    .banner {
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(245,158,11,0.35);
+      background: rgba(245,158,11,0.08);
+      color: #fcd34d;
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>XingAI Enterprise<br>Agent Platform</h1>
+        <p>From Multi-Agent POC to Enterprise Digital Workforce</p>
+        <span class="phase-badge">Phase 1 · MVP Validation</span>
+      </div>
+      <nav>
+        <div class="nav-section">
+          <div class="nav-label">Workspace</div>
+          <a class="nav-item future">Home</a>
+          <a class="nav-item active">New Request</a>
+          <a class="nav-item future">Conversations <small>P2</small></a>
+          <a class="nav-item future">Agents <small>P2</small></a>
+          <a class="nav-item future">Tools (MCP) <small>P2</small></a>
+          <a class="nav-item future">Knowledge <small>P2</small></a>
+          <a class="nav-item future">Events <small>P3</small></a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-label">Observability</div>
+          <a class="nav-item active">Trace &amp; Logs</a>
+          <a class="nav-item future">Metrics <small>P3</small></a>
+          <a class="nav-item future">Alerts <small>P3</small></a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-label">Governance</div>
+          <a class="nav-item future">Policies <small>P3</small></a>
+          <a class="nav-item future">Audit Logs <small>P3</small></a>
+          <a class="nav-item future">Access Control <small>P3</small></a>
+        </div>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div>
+          <h2>New Request</h2>
+          <div class="sub">Goal → Planning → Agent Collaboration → Tool Execution → Decision</div>
+        </div>
+        <div class="user">
+          <strong>Demo User</strong>
+          XingAI Architect
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="banner">
+          MVP Validation Layer — not production. Same Orchestrator + Specialist Agents architecture as the future enterprise platform.
+        </div>
+
+        <section class="request-card">
+          <h3>Describe your goal</h3>
+          <div class="request-row">
+            <select id="goal">
+              <option value="product_ideation">Goal: Product Ideation</option>
+              <option value="architecture_review">Goal: Architecture Review (Phase 2)</option>
+              <option value="incident_response">Goal: Incident Response (Phase 3)</option>
+            </select>
+          </div>
+          <textarea id="prompt" style="margin-top:12px"></textarea>
+          <div class="request-row" style="margin-top:12px">
+            <button class="btn-run" id="runBtn">Run</button>
+            <span id="status" style="color:var(--muted);font-size:0.82rem"></span>
+          </div>
+          <div id="error" class="error"></div>
+        </section>
+
+        <div class="workspace">
+          <section class="panel">
+            <div class="panel-head">
+              <h3>Execution Timeline</h3>
+              <span class="req-id" id="reqId">—</span>
+            </div>
+            <div class="panel-body">
+              <div id="timeline" class="timeline empty">Run a request to see orchestrator handoffs.</div>
+              <div id="traceDetail" class="trace-detail" hidden></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h3>Final Output</h3>
+              <div class="tabs">
+                <span class="tab active" data-tab="result">Result</span>
+                <span class="tab" data-tab="summary">Summary</span>
+                <span class="tab" data-tab="artifacts">Artifacts</span>
+              </div>
+            </div>
+            <div class="panel-body output">
+              <pre id="finalOutput" class="empty">Combined agent output will appear here.</pre>
+            </div>
+          </section>
+        </div>
+
+        <div class="bottom-grid">
+          <div class="info-card">
+            <h4>How Multiple Agents Work</h4>
+            <div class="flow">User Request
+  ↓
+Orchestrator (plan + route)
+  ↓
+Research → Product → Tech → Critic
+  ↓
+Orchestrator (aggregate)
+  ↓
+Final Answer + Trace</div>
+          </div>
+          <div class="info-card">
+            <h4>Agent Ecosystem</h4>
+            <div class="chips" id="agentChips"></div>
+          </div>
+          <div class="info-card">
+            <h4>MCP Layer (Phase 2+)</h4>
+            <div class="chips" id="mcpChips"></div>
+          </div>
+          <div class="info-card">
+            <h4>Observability</h4>
+            <div class="metrics" id="metrics">
+              <div class="metric"><div class="val">—</div><div class="lbl">Requests</div></div>
+              <div class="metric"><div class="val">—</div><div class="lbl">Success</div></div>
+              <div class="metric"><div class="val">—</div><div class="lbl">Avg Step (ms)</div></div>
+              <div class="metric"><div class="val">P1</div><div class="lbl">Phase</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SAMPLE = `I want to build a new XingAI product from latest AI research ideas.
+Find one idea, turn it into a product concept, propose MVP features, and explain technical architecture.`;
+
+    let lastRun = null;
+    let lastTrace = null;
+
+    const promptEl = document.getElementById("prompt");
+    const runBtn = document.getElementById("runBtn");
+    const statusEl = document.getElementById("status");
+    const errorEl = document.getElementById("error");
+    const timelineEl = document.getElementById("timeline");
+    const traceDetailEl = document.getElementById("traceDetail");
+    const finalOutputEl = document.getElementById("finalOutput");
+    const reqIdEl = document.getElementById("reqId");
+
+    promptEl.value = SAMPLE;
+
+    function summarizeStep(step) {
+      try {
+        const out = JSON.parse(step.output);
+        if (out.trend) return out.trend;
+        if (out.product_name) return out.product_name + " — " + (out.value_proposition || "");
+        if (out.frontend) return out.agent_flow || "Architecture plan ready";
+        if (out.product_risk) return "Risks reviewed · " + (out.mitigation?.[0] || "");
+        if (out.decision) return out.decision;
+        if (out.final_answer_preview) return "Final answer assembled";
+      } catch (_) {}
+      return (step.output || "").slice(0, 120);
+    }
+
+    function renderTimeline(trace) {
+      timelineEl.classList.remove("empty");
+      timelineEl.innerHTML = trace.trace.map((step, i) => `
+        <article class="tl-item${i === 0 ? ' selected' : ''}" data-idx="${i}">
+          <div class="tl-top">
+            <span class="tl-name">${step.agent_name}</span>
+            <span class="badge">Completed</span>
+          </div>
+          <div class="tl-meta">${step.duration_ms ? step.duration_ms + 'ms · ' : ''}${step.tool_used || 'orchestration'}</div>
+          <div class="tl-summary">${summarizeStep(step)}</div>
+        </article>
+      `).join("");
+
+      timelineEl.querySelectorAll(".tl-item").forEach((el) => {
+        el.addEventListener("click", () => {
+          timelineEl.querySelectorAll(".tl-item").forEach((x) => x.classList.remove("selected"));
+          el.classList.add("selected");
+          showTraceDetail(trace.trace[Number(el.dataset.idx)]);
+        });
+      });
+
+      if (trace.trace.length) showTraceDetail(trace.trace[0]);
+    }
+
+    function showTraceDetail(step) {
+      traceDetailEl.hidden = false;
+      traceDetailEl.innerHTML = `
+        <strong>Trace Detail — ${step.agent_name}</strong>
+        <pre><strong>Input</strong>\n${step.input || "(none)"}\n\n<strong>Output</strong>\n${step.output}</pre>
+      `;
+    }
+
+    function setTab(tab) {
+      document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
+      if (!lastRun) return;
+      if (tab === "result") {
+        finalOutputEl.textContent = lastRun.final_answer;
+      } else if (tab === "summary") {
+        const s = lastRun.sections || {};
+        finalOutputEl.textContent = [
+          "Research: " + (s.research?.trend || "—"),
+          "Product: " + (s.product?.product_name || "—"),
+          "Tech: " + (s.tech?.agent_flow || "—"),
+          "Critic: " + (s.critic?.product_risk || "—"),
+        ].join("\n\n");
+      } else {
+        finalOutputEl.textContent = JSON.stringify(lastRun.sections || {}, null, 2);
+      }
+    }
+
+    document.querySelectorAll(".tab").forEach((t) => {
+      t.addEventListener("click", () => setTab(t.dataset.tab));
+    });
+
+    async function loadRegistry() {
+      const res = await fetch("/demo/agents");
+      const data = await res.json();
+      document.getElementById("agentChips").innerHTML = data.agents.map((a) =>
+        `<span class="chip ${a.status}">${a.name}${a.status === 'planned' ? ' · P' + a.phase : ''}</span>`
+      ).join("");
+      document.getElementById("mcpChips").innerHTML = data.mcp.map((m) =>
+        `<span class="chip planned">${m.name}</span>`
+      ).join("");
+    }
+
+    async function loadMetrics() {
+      const res = await fetch("/demo/metrics");
+      const m = await res.json();
+      const cells = document.querySelectorAll("#metrics .metric .val");
+      cells[0].textContent = m.total_requests;
+      cells[1].textContent = m.success_rate + "%";
+      cells[2].textContent = m.avg_latency_ms || "—";
+    }
+
+    runBtn.addEventListener("click", async () => {
+      runBtn.disabled = true;
+      errorEl.textContent = "";
+      statusEl.textContent = "Orchestrator planning handoffs…";
+      finalOutputEl.textContent = "";
+      timelineEl.innerHTML = "";
+      traceDetailEl.hidden = true;
+
+      try {
+        const runRes = await fetch("/demo/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_input: promptEl.value, goal: document.getElementById("goal").value }),
+        });
+        if (!runRes.ok) throw new Error(await runRes.text());
+        lastRun = await runRes.json();
+
+        const traceRes = await fetch(`/demo/trace/${lastRun.request_id}`);
+        if (!traceRes.ok) throw new Error(await traceRes.text());
+        lastTrace = await traceRes.json();
+
+        reqIdEl.textContent = lastRun.request_id;
+        finalOutputEl.classList.remove("empty");
+        setTab("result");
+        renderTimeline(lastTrace);
+        statusEl.textContent = `OpenAI: ${lastRun.openai_configured ? "live" : "fallback"} · ${lastTrace.total_duration_ms || 0}ms total`;
+        loadMetrics();
+      } catch (err) {
+        errorEl.textContent = err.message || "Run failed";
+        statusEl.textContent = "";
+      } finally {
+        runBtn.disabled = false;
+      }
+    });
+
+    loadRegistry();
+    loadMetrics();
+  </script>
+</body>
+</html>

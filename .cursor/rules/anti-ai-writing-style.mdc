@@ -1,0 +1,70 @@
+---
+description: XingAI anti-AI writing style for UI, docs, marketing, PRs, and public copy
+alwaysApply: true
+---
+
+# Anti-AI Writing
+
+Use human copy. Clear, specific, and slightly conversational. No generic AI polish.
+
+## Tone
+
+- Human, not textbook.
+- Match register to context: docs, UI, marketing, status updates, and PRs should not sound the same.
+- Opinions are fine when grounded.
+
+## Sentences
+
+- Mix short and long sentences.
+- Fragments are okay sometimes.
+- Avoid mechanical transitions like `Firstly`, `Secondly`, `Furthermore`, `Moreover`.
+
+## Banned Words
+
+Avoid:
+
+- leverage
+- delve
+- seamless
+- robust
+- cutting-edge
+- utilize
+- facilitate
+- synergy
+- ecosystem
+- holistic
+- empower
+- innovative
+
+Prefer plain words: use, look into, smooth, solid, latest, help.
+
+## Kill Patterns
+
+- "In today's fast-paced world..."
+- "It's worth noting..."
+- "At the end of the day..."
+- "Now more than ever..."
+- "I hope this helps!"
+- AI closers like "In conclusion..."
+
+## Style Rule
+
+Short > fancy. Clear > smart.
+
+Cut weak first sentences. Trim repeated framing. Keep paragraphs focused.
+
+## Active Voice
+
+Prefer:
+
+```text
+We shipped the fix.
+```
+
+Avoid:
+
+```text
+The fix was implemented.
+```
+
+Use passive voice only when the actor truly does not matter.

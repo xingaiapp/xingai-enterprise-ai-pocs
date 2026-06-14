@@ -1,0 +1,61 @@
+---
+description: Require legal protection and liability disclaimers across XingAI repos, docs, code, POCs, and guidance
+alwaysApply: true
+---
+
+# Legal Protection For All XingAI Repos
+
+All XingAI public repos, docs, code samples, POCs, templates, prompts, and guidance must include clear legal protection.
+
+## Core Rule
+
+XingAI does not accept responsibility for how users use code, docs, prompts, architecture guidance, POCs, or AI-generated outputs.
+
+Before shipping or publishing a repo, make sure the README or legal docs state:
+
+- content is provided for informational and educational purposes,
+- code and POCs are provided "as is",
+- users are responsible for their own use, deployment, compliance, security, and outcomes,
+- XingAI gives no warranty or guarantee,
+- following guidance does not create a professional, legal, financial, medical, or compliance relationship,
+- users should consult qualified professionals for regulated decisions.
+
+## Required For Public Repos
+
+Every public XingAI repo should include at least one of:
+
+- `DISCLAIMER.md`
+- README `Disclaimer` section
+- legal links to Privacy / Terms / Disclaimer when it is a product app
+
+Best practice: include both README summary and a dedicated `DISCLAIMER.md`.
+
+## Product Apps
+
+Public `*.xingai.app` products must link:
+
+- Privacy Policy
+- Terms of Service
+- Disclaimer
+
+AI decision products must clearly say outputs are suggestions or estimates, not professional advice.
+
+## POCs And Engineering Guidance
+
+POCs, prompts, rules, skills, architecture docs, templates, and code examples must say:
+
+- not production-ready unless explicitly stated,
+- users must review security, privacy, legal, compliance, cost, and operational risks before using,
+- users are responsible for validating correctness and fitness for their use case.
+
+## Common Mistakes To Avoid
+
+- Publishing a repo with no README disclaimer.
+- Saying "enterprise-ready" without naming what is not production-ready.
+- Giving financial, legal, medical, education, or compliance guidance without a disclaimer.
+- Shipping POCs that look production-ready but omit auth, audit, tenant isolation, or security warnings.
+- Copying legal text between products without checking product-specific risk.
+
+## Note
+
+This rule is not legal advice. It is an engineering publishing standard. For final legal language, use qualified legal review.

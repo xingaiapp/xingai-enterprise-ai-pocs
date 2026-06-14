@@ -1,0 +1,28 @@
+---
+description: Require README version notes before pushing project changes
+alwaysApply: true
+---
+
+# Version + README Before Push
+
+Before pushing changes in any XingAI repo, check whether the work should update the project README version notes.
+
+## Required Push Checklist
+
+1. Inspect the staged diff before push.
+2. Classify the change size:
+   - `mini` — copy/docs only, tiny UI wording, config notes, small bug fix with no behavior change.
+   - `minor` — user-visible behavior, new feature, new workflow, API/schema/cache behavior, deployment behavior.
+   - `big` — product direction, architecture boundary, data model, auth, payment, legal, major UX/navigation.
+3. If the change is user-visible, operational, architectural, or deployment-related, update `README.md`:
+   - bump or confirm the visible version line if the repo has one,
+   - add a short current-version note,
+   - link any new docs/ADRs created by the change.
+4. If README does not need an update, explain why in the final response.
+5. Do not push until README/version status has been checked.
+
+## Examples
+
+- Renaming a homepage section across UI locales: `mini`, update README current-version notes.
+- Adding worker cache prewarming or stale-cache rules: `minor`, update README and ADR links.
+- Moving decision logic across services or changing auth: `big`, update README, ADR, and deployment docs.

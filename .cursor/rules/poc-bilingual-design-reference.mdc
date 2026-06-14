@@ -1,0 +1,28 @@
+---
+description: Require POCs to reference bilingual enterprise AI design docs
+alwaysApply: false
+globs: pocs/**/*.md
+---
+
+# POC Bilingual Design References
+
+When creating or editing any POC in `xingai-enterprise-ai-pocs`, every POC must link back to the matching design material in `xingai-enterprise-ai-design`.
+
+## Required
+
+- Each POC `README.md` must include a `Related Design Docs` section.
+- Each POC `references.md` must include a `XingAI Design Docs` section.
+- Design doc links must include both versions when available:
+  - English article/design doc
+  - 中文 article/design doc
+- If the matching 中文 doc does not exist yet, add a clear `TODO: add Chinese design doc` note instead of silently linking only English.
+- The design repo may link back to the runnable POC once the POC has meaningful code or architecture notes.
+
+## Example
+
+```md
+## Related Design Docs
+
+- EN: [From AI Demos to Enterprise AI Decision Systems](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-07-enterprise-ai-decision-systems.md)
+- 中文: [从 AI 演示到企业 AI 决策系统](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-07-enterprise-ai-decision-systems.zh.md)
+```
