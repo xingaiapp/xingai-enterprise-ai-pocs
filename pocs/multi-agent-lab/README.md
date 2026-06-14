@@ -47,9 +47,17 @@ Open **http://localhost:8010**
 
 ---
 
-## Demo UI (Enterprise Workspace)
+## System Design
 
-The UI mirrors the enterprise platform mockup:
+![Multi-Agent Lab — Phase 1 System Design UX](assets/multi-agent-lab-system-design-ux.png)
+
+Layered architecture mockup (not the web UI): Demo Client → FastAPI → Orchestrator → specialist agents → simulated tools → SQLite trace/governance, with execution trace timeline on the right.
+
+Runnable demo UI: `backend/static/index.html` at **http://localhost:8010** · See [architecture.md](architecture.md) and [enterprise-mapping.md](enterprise-mapping.md).
+
+---
+
+## Demo UI (Enterprise Workspace)
 
 | Panel | Purpose |
 |---|---|

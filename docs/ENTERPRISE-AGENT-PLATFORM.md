@@ -244,6 +244,14 @@ Prefer service principals + policy enforcement over agents using user credential
 
 ---
 
+## Multi-Agent Lab System Design
+
+![Multi-Agent Lab — Phase 1 System Design UX](../assets/multi-agent-lab-system-design-ux.png)
+
+Phase 1 layered architecture: Demo Client → FastAPI → **Orchestrator Agent** → Research / Product / Tech / Critic → simulated tools (`fake_research_tool`, `cache_tool`, OpenAI) → SQLite (`trace_logs`, governance). Trace timeline on the right shows one full request. See [Multi-Agent Lab POC](../pocs/multi-agent-lab/).
+
+---
+
 ## Relationship Diagram
 
 ```text

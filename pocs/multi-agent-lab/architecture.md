@@ -1,5 +1,11 @@
 # Architecture — Multi-Agent Lab
 
+## System Design UX
+
+![Multi-Agent Lab — Phase 1 System Design UX](assets/multi-agent-lab-system-design-ux.png)
+
+Polished system design mockup (same style as [Orchestrator vs MCP Gateway](../../docs/assets/orchestrator-vs-mcp-gateway-ux.png)): six layers from Demo Client through FastAPI, Orchestrator, specialist agents, simulated MCP tools, and SQLite governance store — plus a trace timeline for one request.
+
 ## Components
 
 | Layer | Responsibility |

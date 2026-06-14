@@ -55,6 +55,10 @@ Aggregation             ← Orchestrator synthesis
 Response                ← Final Answer + Trace
 ```
 
+## System Design
+
+![Multi-Agent Lab — Phase 1 System Design UX](assets/multi-agent-lab-system-design-ux.png)
+
 ## UI Mapping (Mockup → POC)
 
 | Mockup Panel | POC Status |

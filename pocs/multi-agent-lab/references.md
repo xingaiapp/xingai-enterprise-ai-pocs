@@ -8,6 +8,7 @@
 - 中文: [从 AI 演示到企业 AI 决策系统](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-07-enterprise-ai-decision-systems.zh.md)
 - [Enterprise AI architecture diagrams](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/assets/ARCHITECTURE-DIAGRAMS.md)
 - UX diagram: [Orchestrator vs MCP Gateway](../../docs/assets/orchestrator-vs-mcp-gateway-ux.png)
+- UX diagram: [Multi-Agent Lab system design](assets/multi-agent-lab-system-design-ux.png) · [copy in docs](../../docs/assets/multi-agent-lab-system-design-ux.png)
 
 ## External References
 

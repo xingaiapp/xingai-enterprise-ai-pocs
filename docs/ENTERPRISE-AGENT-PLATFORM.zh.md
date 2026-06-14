@@ -125,6 +125,14 @@ POC 通过 **Agent Trace Timeline** 演示这一点。
 
 ---
 
+## Multi-Agent Lab 系统设计
+
+![Multi-Agent Lab — Phase 1 系统设计 UX](../assets/multi-agent-lab-system-design-ux.png)
+
+Phase 1 分层架构：Demo Client → FastAPI → **Orchestrator Agent** → Research / Product / Tech / Critic → 模拟工具 → SQLite（`trace_logs`、治理）。右侧 Trace Timeline 展示一次完整请求。详见 [Multi-Agent Lab POC](../pocs/multi-agent-lab/)。
+
+---
+
 ## 路线图
 
 | 阶段 | 范围 |
