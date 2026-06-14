@@ -111,6 +111,56 @@ Request → Intent Detection → Planning → Agent Selection
 
 ---
 
+## Orchestrator vs MCP Gateway
+
+![Orchestrator vs MCP Gateway — Enterprise Agent Platform UX](../assets/orchestrator-vs-mcp-gateway-ux.png)
+
+Teams often ask: *Do we need an **Orchestration MCP** to work with GitHub, Jira, and SharePoint MCPs?*
+
+**No.** At enterprise level you need **two internal systems**, not a third MCP called "Orchestration MCP":
+
+| System | Orchestrates | Is it MCP? | Phase |
+|--------|--------------|------------|-------|
+| **Orchestrator Agent** | Other **agents** (Research → Product → Tech) | No | Phase 1 — [Multi-Agent Lab](../pocs/multi-agent-lab/) |
+| **MCP Gateway** | **Tools** across domain MCP servers | Gateway may expose one MCP API inward | Phase 2 — `mcp-tool-gateway` (planned) |
+| **Domain MCPs** | One enterprise system each (GitHub, Jira, SharePoint…) | Yes | Phase 2+ |
+
+```text
+Workflow orchestration  →  Orchestrator Agent
+Tool orchestration      →  MCP Gateway
+System integration      →  Domain MCP servers
+```
+
+**Security path:**
+
+```text
+User → Auth → Orchestrator Agent → Specialist Agent → MCP Gateway → Domain MCP → Enterprise System
+```
+
+**Do not:** let agents call many MCPs directly, or build an "Orchestration MCP" that runs the whole workflow.
+
+**Example trace (gateway deny teaches governance):**
+
+```text
+[1] Orchestrator Agent     · plan handoffs
+[2] Research Agent         · sharepoint.search_documents
+[3] MCP Gateway            · ALLOW  · sharepoint.*
+[4] SharePoint MCP         · result
+[5] Tech Agent             · jira.create_issue
+[6] MCP Gateway            · DENIED · Tech Agent may not use jira:*
+[7] Tech Agent             · github.search_code
+[8] MCP Gateway            · ALLOW  · github.*
+[9] GitHub MCP             · result
+[10] Orchestrator Agent    · final answer
+```
+
+Full 5W write-up, examples, and anti-patterns:
+
+- EN: [Orchestrator vs MCP Gateway](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-13-orchestrator-vs-mcp-gateway.md)
+- 中文: [Orchestrator 与 MCP Gateway](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-13-orchestrator-vs-mcp-gateway.zh.md)
+
+---
+
 ## POC → Platform Mapping
 
 | Phase 1 (Current POC) | Phase 2+ (Enterprise Platform) |
@@ -128,10 +178,10 @@ See [`pocs/multi-agent-lab/enterprise-mapping.md`](../pocs/multi-agent-lab/enter
 
 ## MCP Layer
 
-Agents should not directly access enterprise systems.
+Agents should not directly access enterprise systems. Route all tool calls through the **MCP Gateway** (see [Orchestrator vs MCP Gateway](#orchestrator-vs-mcp-gateway) above).
 
 ```text
-Agent → MCP → Enterprise Resource
+Agent → MCP Gateway → Domain MCP → Enterprise Resource
 ```
 
 Benefits: security, standardization, auditability, replaceability.
@@ -223,5 +273,7 @@ Research Product Tech Critic
 
 - [Multi-Agent Lab POC](../pocs/multi-agent-lab/README.md)
 - [POC Standards](./POC-STANDARDS.md)
+- EN: [Orchestrator vs MCP Gateway](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-13-orchestrator-vs-mcp-gateway.md)
+- 中文: [Orchestrator 与 MCP Gateway](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-13-orchestrator-vs-mcp-gateway.zh.md)
 - EN: [Enterprise AI Decision Systems](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-07-enterprise-ai-decision-systems.md)
 - 中文: [从 AI 演示到企业 AI 决策系统](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-07-enterprise-ai-decision-systems.zh.md)

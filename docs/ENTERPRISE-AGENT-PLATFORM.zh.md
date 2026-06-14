@@ -54,6 +54,56 @@ MCP 层（内外部工具网关）
 
 ---
 
+## Orchestrator 与 MCP Gateway
+
+![Orchestrator 与 MCP Gateway — 企业 Agent 平台 UX](../assets/orchestrator-vs-mcp-gateway-ux.png)
+
+团队常问：*有了 GitHub、Jira、SharePoint MCP，是否还需要 **Orchestration MCP**？*
+
+**不需要。** 企业级需要 **两个内部系统**，而不是第三个叫「Orchestration MCP」的 MCP：
+
+| 系统 | 编排对象 | 是否 MCP | 阶段 |
+|------|----------|----------|------|
+| **Orchestrator Agent** | 其他 **Agent**（Research → Product → Tech） | 否 | Phase 1 — [Multi-Agent Lab](../pocs/multi-agent-lab/) |
+| **MCP Gateway** | 跨领域 MCP 的 **工具** | 网关对内可暴露 MCP 接口 | Phase 2 — `mcp-tool-gateway`（规划中） |
+| **领域 MCP** | 单个企业系统（GitHub、Jira、SharePoint…） | 是 | Phase 2+ |
+
+```text
+工作流编排  →  Orchestrator Agent
+工具编排    →  MCP Gateway
+系统集成    →  领域 MCP 服务器
+```
+
+**安全路径：**
+
+```text
+用户 → 认证 → Orchestrator Agent → 专业 Agent → MCP Gateway → 领域 MCP → 企业系统
+```
+
+**避免：** Agent 直连多个 MCP，或用「Orchestration MCP」跑完整工作流。
+
+**Trace 示例（Gateway DENY 体现治理）：**
+
+```text
+[1] Orchestrator Agent     · 规划 handoff
+[2] Research Agent         · sharepoint.search_documents
+[3] MCP Gateway            · ALLOW  · sharepoint.*
+[4] SharePoint MCP         · 结果
+[5] Tech Agent             · jira.create_issue
+[6] MCP Gateway            · DENIED · Tech Agent 不可用 jira:*
+[7] Tech Agent             · github.search_code
+[8] MCP Gateway            · ALLOW  · github.*
+[9] GitHub MCP             · 结果
+[10] Orchestrator Agent    · 最终答案
+```
+
+完整 5W 说明与反模式：
+
+- EN: [Orchestrator vs MCP Gateway](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-13-orchestrator-vs-mcp-gateway.md)
+- 中文: [Orchestrator 与 MCP Gateway](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-13-orchestrator-vs-mcp-gateway.zh.md)
+
+---
+
 ## POC 与平台映射
 
 | Phase 1（当前 POC） | Phase 2+（企业平台） |
@@ -96,3 +146,5 @@ POC 通过 **Agent Trace Timeline** 演示这一点。
 
 - [Multi-Agent Lab POC](../pocs/multi-agent-lab/README.md)
 - [Enterprise Architecture (EN)](./ENTERPRISE-AGENT-PLATFORM.md)
+- EN: [Orchestrator vs MCP Gateway](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-13-orchestrator-vs-mcp-gateway.md)
+- 中文: [Orchestrator 与 MCP Gateway](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-06-13-orchestrator-vs-mcp-gateway.zh.md)
