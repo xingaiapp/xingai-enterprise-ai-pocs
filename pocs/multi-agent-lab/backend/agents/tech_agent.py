@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import logging
+
+from agents.prompts import TECH_SYSTEM
 from services.llm import chat_json
 
-SYSTEM = """You are the Tech Agent in XingAI Agent Lab.
-Design technical architecture for the proposed product.
-Return JSON with keys: frontend, backend, database, api, agent_flow, deployment."""
+logger = logging.getLogger(__name__)
 
 
-def run(user_request: str, product: dict) -> tuple[dict, str]:
+def run(user_request: str, product: dict, request_id: str = "") -> tuple[dict, str]:
     prompt = f"""User request:
 {user_request}
 
@@ -16,10 +17,16 @@ Product plan:
 
 Propose a practical MVP architecture aligned with XingAI patterns (FastAPI + SQLite + OpenAI)."""
 
-    result = chat_json(SYSTEM, prompt)
+    result = chat_json(TECH_SYSTEM, prompt, request_id=request_id)
     if result:
+        logger.debug("[%s] Tech Agent: OpenAI result received", request_id)
         return result, "openai"
 
+    logger.info("[%s] Tech Agent: using fallback (OpenAI unavailable)", request_id)
+    return fallback(), "fallback"
+
+
+def fallback() -> dict:
     return {
         "frontend": "Simple HTML demo page served by FastAPI",
         "backend": "Python FastAPI orchestrator with specialist agent modules",
@@ -27,15 +34,4 @@ Propose a practical MVP architecture aligned with XingAI patterns (FastAPI + SQL
         "api": "POST /demo/run, GET /demo/trace/{request_id}",
         "agent_flow": "Orchestrator → Research → Product → Tech → Critic → Final answer",
         "deployment": "Local uvicorn for demo; later Fly.io or internal k8s",
-    }, "fallback"
-
-
-def fallback() -> dict:
-    return {
-        "frontend": "HTML demo UI",
-        "backend": "FastAPI",
-        "database": "SQLite",
-        "api": "/demo/run, /demo/trace/{id}",
-        "agent_flow": "Orchestrator handoffs",
-        "deployment": "uvicorn local",
     }

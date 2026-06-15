@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import logging
+
+from agents.prompts import PRODUCT_SYSTEM
 from services.llm import chat_json
 
-SYSTEM = """You are the Product Agent in XingAI Agent Lab.
-Turn research insight into a product concept for XingAI.
-Return JSON with keys: product_name, target_user, pain_point, mvp_features (array), value_proposition."""
+logger = logging.getLogger(__name__)
 
 
-def run(user_request: str, research: dict) -> tuple[dict, str]:
+def run(user_request: str, research: dict, request_id: str = "") -> tuple[dict, str]:
     prompt = f"""User request:
 {user_request}
 
@@ -16,10 +17,16 @@ Research insight:
 
 Propose a product concept and MVP feature list."""
 
-    result = chat_json(SYSTEM, prompt)
+    result = chat_json(PRODUCT_SYSTEM, prompt, request_id=request_id)
     if result:
+        logger.debug("[%s] Product Agent: OpenAI result received", request_id)
         return result, "openai"
 
+    logger.info("[%s] Product Agent: using fallback (OpenAI unavailable)", request_id)
+    return fallback(), "fallback"
+
+
+def fallback() -> dict:
     return {
         "product_name": "XingAI Agent Lab",
         "target_user": "Product and engineering teams evaluating AI agent architecture",
@@ -31,14 +38,4 @@ Propose a product concept and MVP feature list."""
             "One-click team demo with sample prompt",
         ],
         "value_proposition": "Show how specialist agents collaborate to turn ideas into plans.",
-    }, "fallback"
-
-
-def fallback() -> dict:
-    return {
-        "product_name": "XingAI Agent Lab",
-        "target_user": "Enterprise AI teams",
-        "pain_point": "Opaque AI answers",
-        "mvp_features": ["Orchestrator", "Trace log", "Specialist agents"],
-        "value_proposition": "Visible multi-agent collaboration",
     }

@@ -1,0 +1,21 @@
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8010:8010"
+    env_file:
+      - ./backend/.env
+    volumes:
+      # Persist SQLite DB across container restarts
+      - poc-db:/app/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  poc-db:

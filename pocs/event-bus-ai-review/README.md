@@ -1,5 +1,9 @@
 # POC: Event Bus AI Review
 
+> **Status: Architecture Design Only — not yet runnable.**
+> This folder contains the architecture design, flow diagram, and enterprise mapping.
+> No implementation exists yet. See [Contributing](../../docs/CONTRIBUTING.md) to build it.
+
 ## What This Proves
 
 This POC validates how an event bus can decouple AI analysis, compliance review, human approval, and audit logging in an enterprise AI decision workflow.

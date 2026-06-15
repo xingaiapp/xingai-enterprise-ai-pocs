@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -11,14 +12,19 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-DB_DIR = Path(__file__).resolve().parent / "db"
-DB_DIR.mkdir(exist_ok=True)
-DB_FILE = DB_DIR / "app.db"
+_DATABASE_URL = os.environ.get("DATABASE_URL", "")
+if _DATABASE_URL:
+    _connect_args = {"check_same_thread": False} if _DATABASE_URL.startswith("sqlite") else {}
+    engine = create_engine(_DATABASE_URL, connect_args=_connect_args)
+else:
+    DB_DIR = Path(__file__).resolve().parent / "db"
+    DB_DIR.mkdir(exist_ok=True)
+    DB_FILE = DB_DIR / "app.db"
+    engine = create_engine(
+        f"sqlite:///{DB_FILE}",
+        connect_args={"check_same_thread": False},
+    )
 
-engine = create_engine(
-    f"sqlite:///{DB_FILE}",
-    connect_args={"check_same_thread": False},
-)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

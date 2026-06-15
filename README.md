@@ -1,6 +1,6 @@
 # XingAI Enterprise AI POCs
 
-**Version:** 0.1.4
+**Version:** 0.2.0
 
 Runnable proof-of-concept projects for enterprise AI decision systems and architecture patterns.
 
@@ -25,7 +25,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 | POC | Pattern | Status | Related Design Topic |
 |---|---|---|---|
 | [Multi-Agent Lab](pocs/multi-agent-lab/) | Orchestrator + specialist handoffs | Runnable · Phase 1 MVP | [Enterprise Agent Platform](docs/ENTERPRISE-AGENT-PLATFORM.md) |
-| Event Bus AI Review | Event-driven AI decisions | Planned | Enterprise AI decision systems |
+| [Event Bus AI Review](pocs/event-bus-ai-review/) | Event-driven AI decisions | Architecture Design Only | Enterprise AI decision systems |
 | Human-in-the-Loop Decision | Approval workflow | Planned | Human approval layers |
 | Memory Layer Demo | User + organization memory | Planned | Memory architectures |
 | MCP Tool Gateway | Tool routing and governance | Planned | MCP in enterprise AI |
@@ -65,6 +65,25 @@ See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md).
 See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for contribution guidelines.
 
 ## Version Notes
+
+### 0.2.0
+
+- **Multi-Agent Lab: error propagation** — `_run_safe()` wrapper catches empty results and exceptions; pipeline surfaces `pipeline_errors` in response instead of silently continuing on failure
+- **Multi-Agent Lab: prompts separated** — all system prompts extracted to `agents/prompts.py`; agents import from there rather than embedding strings
+- **Multi-Agent Lab: topic-aware research** — `fake_research_tool` returns different fixtures for invest / meal / learn / enterprise / default topics based on user input keywords
+- **Multi-Agent Lab: input validation** — `POST /demo/run` rejects inputs over 2000 characters (422)
+- **Multi-Agent Lab: rate limiting** — `slowapi` limits `POST /demo/run` to 10 req/min per IP (configurable via `RATE_LIMIT_PER_MINUTE`)
+- **Multi-Agent Lab: CORS restricted** — `allow_origins` now reads from `ALLOWED_ORIGINS` env var; no longer `"*"` by default
+- **Multi-Agent Lab: structured logging** — Python `logging` wired throughout orchestrator, agents, LLM service, and tools
+- **Multi-Agent Lab: LLM request_id** — `chat_json()` accepts `request_id` for log correlation
+- **Multi-Agent Lab: configurable cache TTL** — `CACHE_TTL_HOURS` env var (default 24)
+- **Multi-Agent Lab: tests** — 30+ pytest tests across cache, research tool, API, and orchestrator; 70% coverage gate
+- **Multi-Agent Lab: Dockerfile + docker-compose** — `docker compose up` from `pocs/multi-agent-lab/`
+- **Multi-Agent Lab: CI** — GitHub Actions: lint (ruff), test + coverage, security scan (pip-audit)
+- **Multi-Agent Lab: Dependabot** — weekly pip updates for backend dependencies
+- **Event Bus AI Review: status label** — README now clearly marked "Architecture Design Only"
+- **Event Bus AI Review: enterprise-mapping.md** — added POC vs Platform mapping and leadership positioning
+- **POC-STANDARDS.md: updated** — `enterprise-mapping.md` now required; status label required; Lessons Learned guidance added
 
 ### 0.1.4
 
