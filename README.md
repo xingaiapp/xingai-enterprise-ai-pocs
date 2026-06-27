@@ -25,6 +25,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 | POC | Pattern | Status | Related Design Topic |
 |---|---|---|---|
 | [Multi-Agent Lab](pocs/multi-agent-lab/) | Orchestrator + specialist handoffs | Runnable · Phase 1 MVP | [Enterprise Agent Platform](docs/ENTERPRISE-AGENT-PLATFORM.md) |
+| [Claims Multi-Agent RAG](pocs/claims-multiagent-rag-poc/) | Supervisor + RAG + citations + human-in-the-loop | Runnable · Phases 1–6 | Insurance / enterprise RAG demo |
 | [Event Bus AI Review](pocs/event-bus-ai-review/) | Event-driven AI decisions | Architecture Design Only | Enterprise AI decision systems |
 | Human-in-the-Loop Decision | Approval workflow | Planned | Human approval layers |
 | Memory Layer Demo | User + organization memory | Planned | Memory architectures |
@@ -35,6 +36,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 ```text
 pocs/
   multi-agent-lab/
+  claims-multiagent-rag-poc/
   event-bus-ai-review/
   human-in-the-loop-decision/
   memory-layer-demo/
@@ -43,6 +45,7 @@ shared/
   schemas/
   docker/
 docs/
+  adr/                          # Cross-POC ADRs (supervisor, audit, human-in-the-loop)
   ENTERPRISE-AGENT-PLATFORM.md
   ENTERPRISE-AGENT-PLATFORM.zh.md
   CONTRIBUTING.md
@@ -58,7 +61,7 @@ Every POC should answer four questions:
 3. What did we learn from building it?
 4. Which English and Chinese design docs does it support?
 
-See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md).
+See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md) and [`docs/adr/README.md`](docs/adr/README.md).
 
 ## Contributing
 

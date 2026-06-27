@@ -1,0 +1,62 @@
+[
+  {
+    "claim_id": "DEMO-APPROVE-GLASS",
+    "raw_claim_text": "Policy POL-1001. Alex Rivera. Date of loss 2026-06-20. A rock hit my windshield on I-580 causing an 8-inch crack. Repair quote $450. Claim type auto glass.",
+    "expected_action": "APPROVE",
+    "notes": "Demo 1 — clean approve within glass sublimit"
+  },
+  {
+    "claim_id": "DEMO-DENY-FLOOD",
+    "raw_claim_text": "Policy POL-2002. Jordan Lee. Basement flooded after heavy rain and storm surge on 2026-06-18. Carpet damage estimated $3,200. Homeowners claim.",
+    "expected_action": "DENY",
+    "notes": "Demo 2 — flood exclusion on POL-2002 (under human review threshold)"
+  },
+  {
+    "claim_id": "DEMO-ESCALATE-FREQ",
+    "raw_claim_text": "Policy POL-3003. Sam Chen. Windshield shattered 2026-06-22. Quote $920. This is my third glass claim in the last month.",
+    "expected_action": "ESCALATE_TO_HUMAN",
+    "notes": "Demo 3 — frequency fraud flag"
+  },
+  {
+    "claim_id": "DEMO-ESCALATE-AMOUNT",
+    "raw_claim_text": "Policy POL-2002. Jordan Lee. Kitchen fire smoke damage throughout first floor on 2026-06-10. Estimate $18,500 for restoration.",
+    "expected_action": "ESCALATE_TO_HUMAN",
+    "notes": "High dollar amount over human_review_threshold"
+  },
+  {
+    "claim_id": "EVAL-APPROVE-HAIL",
+    "raw_claim_text": "Policy POL-1001. Alex Rivera. Hail dented hood and roof on 2026-05-15. Body shop estimate $1,100 comprehensive claim.",
+    "expected_action": "ESCALATE_TO_HUMAN",
+    "notes": "Comprehensive claim without glass fast-track — escalates when not clearly auto-approvable"
+  },
+  {
+    "claim_id": "EVAL-DENY-FLOOD-TX",
+    "raw_claim_text": "Policy POL-2002. Jordan Lee. Rising water from creek overflow damaged living room flooring on 2026-04-02. Repair $2,800.",
+    "expected_action": "DENY",
+    "notes": "Flood exclusion cite"
+  },
+  {
+    "claim_id": "EVAL-ESCALATE-LOW-CONF",
+    "raw_claim_text": "I had an accident last week and need help. Damage looks expensive but I do not have my policy number handy.",
+    "expected_action": "ESCALATE_TO_HUMAN",
+    "notes": "Missing policy number — intake escalates"
+  },
+  {
+    "claim_id": "EVAL-APPROVE-GLASS-2",
+    "raw_claim_text": "Policy POL-1001. Alex Rivera. 2026-06-01 vandal scratched driver side window. Replacement $620 auto glass.",
+    "expected_action": "APPROVE",
+    "notes": "Second glass approve case"
+  },
+  {
+    "claim_id": "EVAL-ESCALATE-NEW-POLICY",
+    "raw_claim_text": "Policy POL-3003. Sam Chen. 2025-11-10 comprehensive claim for stolen catalytic converter. Estimate $2,400.",
+    "expected_action": "ESCALATE_TO_HUMAN",
+    "notes": "Within 14 days of policy start"
+  },
+  {
+    "claim_id": "EVAL-ESCALATE-FREQ-HISTORY",
+    "raw_claim_text": "Policy POL-3003. Sam Chen. 2025-12-20 auto glass crack from debris. Repair $410.",
+    "expected_action": "ESCALATE_TO_HUMAN",
+    "notes": "History shows multiple recent claims on POL-3003"
+  }
+]

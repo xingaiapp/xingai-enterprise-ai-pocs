@@ -1,0 +1,47 @@
+[
+  {
+    "policy_number": "POL-1001",
+    "claim_id": "CLM-H-001",
+    "incident_date": "2025-03-10",
+    "claim_type": "auto_glass",
+    "amount_usd": 420.0,
+    "status": "approved",
+    "description": "Windshield chip from highway debris."
+  },
+  {
+    "policy_number": "POL-1001",
+    "claim_id": "CLM-H-002",
+    "incident_date": "2025-08-22",
+    "claim_type": "auto_glass",
+    "amount_usd": 680.0,
+    "status": "approved",
+    "description": "Side window vandalism in parking garage."
+  },
+  {
+    "policy_number": "POL-3003",
+    "claim_id": "CLM-H-010",
+    "incident_date": "2025-11-20",
+    "claim_type": "auto_glass",
+    "amount_usd": 350.0,
+    "status": "approved",
+    "description": "Rear glass replacement."
+  },
+  {
+    "policy_number": "POL-3003",
+    "claim_id": "CLM-H-011",
+    "incident_date": "2025-12-05",
+    "claim_type": "comprehensive",
+    "amount_usd": 1200.0,
+    "status": "approved",
+    "description": "Hail damage to hood."
+  },
+  {
+    "policy_number": "POL-3003",
+    "claim_id": "CLM-H-012",
+    "incident_date": "2025-12-18",
+    "claim_type": "auto_glass",
+    "amount_usd": 890.0,
+    "status": "pending",
+    "description": "Windshield crack — third claim in 30 days."
+  }
+]

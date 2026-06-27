@@ -1,0 +1,51 @@
+# Claims adjudication thresholds — no magic numbers in code
+
+intake:
+  min_extraction_confidence: 0.75
+  required_fields:
+    - claimant_name
+    - policy_number
+    - incident_date
+    - incident_description
+    - claimed_amount
+    - claim_type
+
+retrieval:
+  top_k_per_collection: 4
+  min_similarity_score: 0.35
+
+fraud:
+  escalate_risk_score: 0.70
+  max_claims_30_days: 2
+  min_days_since_policy_start: 14
+  amount_vs_limit_flag_ratio: 0.90
+
+adjudication:
+  human_review_threshold_usd: 5000.00
+  min_decision_confidence: 0.60
+  require_policy_citation: true
+
+vector_store:
+  chunk_size: 500
+  chunk_overlap: 80
+  collections:
+    policy_documents: policy_documents
+    claim_history: claim_history
+    regulations: regulations
+
+audit:
+  db_filename: audit_trail.sqlite
+  pii_redact_patterns:
+    - "\\b\\d{3}-\\d{2}-\\d{4}\\b"
+    - "\\b\\d{9,12}\\b"
+
+llm:
+  provider: anthropic
+  model: claude-sonnet-4-20250514
+  temperature: 0.0
+  max_tokens: 2048
+
+embeddings:
+  provider: openai
+  model: text-embedding-3-small
+  fallback: chroma_default

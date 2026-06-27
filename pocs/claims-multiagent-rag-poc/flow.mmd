@@ -1,0 +1,9 @@
+flowchart TD
+    IN[Claim submitted] --> SUP[Supervisor / LangGraph]
+    SUP --> INT[Intake Agent]
+    INT -->|low confidence| HR[Human Review]
+    INT --> RET[Retrieval Agent RAG]
+    RET --> FRD[Fraud-Check Agent]
+    FRD --> ADJ[Adjudication Agent]
+    ADJ --> AUD[Audit Logger]
+    ADJ -->|escalate| HR
