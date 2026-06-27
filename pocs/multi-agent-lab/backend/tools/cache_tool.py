@@ -18,7 +18,11 @@ def cache_get(db: Session, namespace: str, text: str) -> dict | None:
     row = db.get(CacheEntry, key)
     if not row:
         return None
-    if row.expires_at < datetime.now(timezone.utc):
+    now = datetime.now(timezone.utc)
+    expires = row.expires_at
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if expires < now:
         db.delete(row)
         db.commit()
         return None
