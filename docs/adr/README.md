@@ -8,8 +8,9 @@ Bilingual ADRs for cross-POC patterns. Convention: [BILINGUAL-ADR.md](./BILINGUA
 | [002](./002-rag-vector-store-production-path.md) | RAG vector store — POC Chroma to production | [RAG 生产路径](./002-rag-vector-store-production-path.zh.md) | Accepted |
 | [003](./003-mcp-gateway-placeholder-policy.md) | MCP gateway placeholder policy for POCs | [MCP Gateway 占位策略](./003-mcp-gateway-placeholder-policy.zh.md) | Accepted |
 | [004](./004-event-bus-ai-review-placeholder.md) | Event bus AI review — design-only placeholder | [事件总线 AI 审核占位](./004-event-bus-ai-review-placeholder.zh.md) | Accepted |
+| [005](./005-loop-engineering-platform-layers.md) | Loop Engineering + 17-layer platform reference architecture | [Loop Engineering 与 17 层平台参考架构](./005-loop-engineering-platform-layers.zh.md) | Accepted |
 
-**Next free number:** **005** (e.g. memory layer demo policy).
+**Next free number:** **006** (e.g. Micro Loop Engine assembly contract).
 
 ## Related
 
