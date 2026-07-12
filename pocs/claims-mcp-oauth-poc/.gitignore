@@ -1,0 +1,15 @@
+# Secrets — never commit real keys or tokens
+keys/private.pem
+keys/public.pem
+.env
+.claims_mcp_tokens.json
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+*.egg-info/

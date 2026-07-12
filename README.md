@@ -1,6 +1,6 @@
 # XingAI Enterprise AI POCs
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 
 Runnable proof-of-concept projects for enterprise AI decision systems and architecture patterns.
 
@@ -26,10 +26,11 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 |---|---|---|---|
 | [Multi-Agent Lab](pocs/multi-agent-lab/) | Orchestrator + specialist handoffs | Runnable · Phase 1 MVP | [Enterprise Agent Platform](docs/ENTERPRISE-AGENT-PLATFORM.md) |
 | [Claims Multi-Agent RAG](pocs/claims-multiagent-rag-poc/) | Supervisor + RAG + citations + human-in-the-loop | Runnable · Phases 1–6 | Insurance / enterprise RAG demo |
+| [Claims MCP OAuth POC](pocs/claims-mcp-oauth-poc/) | Real OAuth 2.1 + PKCE + JWT auth, two-wall authorization, Review→Adjudicate | Runnable · Phase 1 | [MCP in Production](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-11-mcp-in-production-robinhood-case.md), [OAuth PKCE Lab](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/guides/2026-07-12-mcp-oauth-pkce-lab.md) |
 | [Event Bus AI Review](pocs/event-bus-ai-review/) | Event-driven AI decisions | Architecture Design Only | Enterprise AI decision systems |
 | Human-in-the-Loop Decision | Approval workflow | Planned | Human approval layers |
 | Memory Layer Demo | User + organization memory | Planned | Memory architectures |
-| MCP Tool Gateway | Tool routing and governance | Planned | MCP in enterprise AI |
+| MCP Tool Gateway | Cross-domain tool routing and governance (builds on Claims MCP OAuth POC's auth layer) | Planned | MCP in enterprise AI |
 
 ## Repository Structure
 
@@ -37,6 +38,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 pocs/
   multi-agent-lab/
   claims-multiagent-rag-poc/
+  claims-mcp-oauth-poc/
   event-bus-ai-review/
   human-in-the-loop-decision/
   memory-layer-demo/
@@ -68,6 +70,14 @@ See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md) and [`docs/adr/README.md`](
 See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for contribution guidelines.
 
 ## Version Notes
+
+### 0.3.0
+
+- **New POC: Claims MCP OAuth POC** (`pocs/claims-mcp-oauth-poc/`) — real OAuth 2.1 + PKCE + JWT Authorization Server and Claims MCP Server, ported from `xingai-enterprise-ai-design`'s brokerage-domain OAuth lab into insurance claims adjudication. First POC in this repo with real (not placeholder-per-ADR-003) authentication — see [ADR-006](docs/adr/006-claims-mcp-oauth-poc-real-auth.md).
+- **Claims MCP OAuth POC: two-wall authorization model** — OAuth scope (`claims.read`/`policy.read`/`claims.review`/`claims.adjudicate`) plus an independent agent settlement-authority policy (claim-type allowlist, dollar cap, "AI-assist queue" isolation) in `mcp_server/policies.py`
+- **Claims MCP OAuth POC: Review → Adjudicate + idempotency** — `review_claim_decision` drafts and freezes a decision; `submit_claim_decision` only accepts a `review_id` + `idempotency_key`, never mutable business parameters
+- **Claims MCP OAuth POC: `docs/mcp-auth-deep-dive.md`** (EN + 中文) — protocol-level walkthrough of PKCE, `state`, discovery, scoped JWTs, and the Four-Layer Protection Model, tied line-by-line to this POC's code
+- **Claims MCP OAuth POC: 33 tests** — PKCE, metadata discovery, token exchange/rotation, scope enforcement, settlement-authority policy, idempotency — plus one live end-to-end smoke test against real running servers (not just mocked auth)
 
 ### 0.2.0
 
@@ -120,6 +130,16 @@ See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for contribution guidelines.
 - [xingai-enterprise-ai-design](https://github.com/xingaiapp/xingai-enterprise-ai-design) — architecture articles, diagrams, and design patterns
 - [xingai-tech-blog](https://github.com/xingaiapp/xingai-tech-blog) — engineering stories and implementation notes
 - [xingai-dot-app](https://github.com/xingaiapp/xingai-dot-app) — XingAI marketing site
+
+## Disclaimer
+
+Content in this repository is for **informational and educational** purposes.
+
+- POCs, code, docs, and examples are provided **“as is”** with no warranty.
+- They are **not** production-ready enterprise software unless a POC explicitly says otherwise.
+- You are responsible for security, privacy, legal, compliance, cost, and operational review before any reuse.
+- Following XingAI guidance does **not** create a professional, legal, financial, or compliance relationship.
+- Consult qualified professionals for regulated decisions.
 
 ## License
 

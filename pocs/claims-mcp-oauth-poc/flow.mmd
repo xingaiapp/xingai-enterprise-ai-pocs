@@ -1,0 +1,48 @@
+sequenceDiagram
+    participant A as Adjuster (human)
+    participant C as Claims Agent Client
+    participant AS as Authorization Server :8000
+    participant M as Claims MCP Server :8001
+
+    C->>M: POST /mcp initialize (no token)
+    M-->>C: 401 WWW-Authenticate: resource_metadata=...
+    C->>M: GET /.well-known/oauth-protected-resource/mcp
+    M-->>C: authorization_servers: [":8000"]
+    C->>AS: GET /.well-known/oauth-authorization-server
+    AS-->>C: endpoints + S256 PKCE required
+
+    Note over C: generate code_verifier + code_challenge (S256)
+
+    C->>A: open browser -> /authorize?...&code_challenge=...
+    A->>AS: GET /authorize (consent screen)
+    AS-->>A: show requested scopes (claims.read, policy.read, claims.review, claims.adjudicate)
+    A->>AS: POST /authorize decision=allow
+    AS-->>C: 302 redirect to loopback callback ?code=...&state=...
+
+    Note over C: verify state matches (CSRF check)
+
+    C->>AS: POST /token code + code_verifier
+    AS->>AS: verify_pkce(code_verifier, code_challenge)
+    AS-->>C: access_token (JWT, 5min TTL) + refresh_token
+
+    C->>M: POST /mcp tools/call get_claim (Bearer JWT)
+    M->>M: verify signature via JWKS + aud + iss + exp
+    M->>M: wall #1: scope includes claims.read?
+    M-->>C: claim file
+
+    C->>M: POST /mcp tools/call review_claim_decision
+    M->>M: wall #1: scope includes claims.review?
+    M->>M: wall #2: AI-assist queue? claim type allowed? amount <= authority?
+    M-->>C: review_id (TTL 300s), summary
+
+    C->>A: show summary, wait for confirmation
+    A->>C: types YES
+
+    C->>M: POST /mcp tools/call submit_claim_decision (review_id, idempotency_key)
+    M->>M: wall #1: scope includes claims.adjudicate?
+    M->>M: review_id single-use? not expired? owner matches sub claim?
+    M->>M: wall #2 re-checked against frozen review
+    M-->>C: finalized decision_id
+
+    C->>M: retry submit_claim_decision (same idempotency_key)
+    M-->>C: same decision_id, idempotent=true

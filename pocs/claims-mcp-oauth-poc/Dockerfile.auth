@@ -1,0 +1,11 @@
+# Authorization Server — holds the RSA private key. Never build this image
+# into a context that also ships the private key to somewhere it doesn't
+# need to be (e.g. never COPY keys/ into the MCP server image — see
+# Dockerfile.mcp, which copies only keys/public.pem).
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY auth_server/ ./auth_server/
+COPY keys/ ./keys/
+CMD ["uvicorn", "auth_server.main:app", "--host", "0.0.0.0", "--port", "8000"]

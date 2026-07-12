@@ -1,0 +1,43 @@
+version: "3.9"
+
+# The client/ (adjuster-assist agent) is intentionally NOT containerized
+# here — it opens the host's browser and binds a loopback callback server on
+# 127.0.0.1, both of which need to run on the operator's own machine, not
+# inside a container. Run it locally: `python -m client.main` (see README.md
+# Quick Start). This mirrors how a real agent runtime deploys too — the
+# agent process runs wherever the human/operator is, the servers run
+# wherever the carrier's infrastructure is.
+
+services:
+  auth-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.auth
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./keys:/app/keys:ro
+    environment:
+      # AUTH_ISSUER must be the address the browser (and the client's token
+      # verification) can actually reach — never the in-network service name.
+      AUTH_ISSUER: "http://localhost:8000"
+      MCP_AUDIENCE: "http://localhost:8001/mcp"
+      ACCESS_TOKEN_TTL: "300"
+
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    ports:
+      - "8001:8001"
+    environment:
+      # EXPECTED_ISSUER: the public issuer the client also knows (same value
+      # as auth-server's AUTH_ISSUER above).
+      EXPECTED_ISSUER: "http://localhost:8000"
+      # JWKS_URL: internal container network — safe to use the service name
+      # here because this fetch never leaves the Docker network, unlike the
+      # browser-facing issuer/authorization URLs above.
+      JWKS_URL: "http://auth-server:8000/jwks.json"
+      EXPECTED_AUDIENCE: "http://localhost:8001/mcp"
+    depends_on:
+      - auth-server

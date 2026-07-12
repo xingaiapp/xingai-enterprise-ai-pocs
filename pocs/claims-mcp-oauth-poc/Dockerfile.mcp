@@ -1,0 +1,10 @@
+# Claims MCP Server — verification-only. Copies just keys/public.pem, never
+# keys/private.pem: this process should be able to *verify* tokens, never
+# *mint* them, even if fully compromised.
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY mcp_server/ ./mcp_server/
+COPY keys/public.pem ./keys/public.pem
+CMD ["uvicorn", "mcp_server.main:app", "--host", "0.0.0.0", "--port", "8001"]
