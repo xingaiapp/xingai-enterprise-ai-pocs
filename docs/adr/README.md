@@ -10,8 +10,9 @@ Bilingual ADRs for cross-POC patterns. Convention: [BILINGUAL-ADR.md](./BILINGUA
 | [004](./004-event-bus-ai-review-placeholder.md) | Event bus AI review — design-only placeholder | [事件总线 AI 审核占位](./004-event-bus-ai-review-placeholder.zh.md) | Accepted |
 | [005](./005-loop-engineering-platform-layers.md) | Loop Engineering + 17-layer platform reference architecture | [Loop Engineering 与 17 层平台参考架构](./005-loop-engineering-platform-layers.zh.md) | Accepted |
 | [006](./006-claims-mcp-oauth-poc-real-auth.md) | Claims MCP OAuth POC — real auth, not a placeholder | [理赔 MCP OAuth POC——真实认证](./006-claims-mcp-oauth-poc-real-auth.zh.md) | Accepted |
+| [007](./007-claims-partner-api-mcp-poc-full-coverage.md) | Claims Partner API MCP POC — full API coverage, auth deferred | [理赔第三方 API MCP POC——全量覆盖，认证推迟](./007-claims-partner-api-mcp-poc-full-coverage.zh.md) | Accepted |
 
-**Next free number:** **007**.
+**Next free number:** **008**.
 
 ## Related
 

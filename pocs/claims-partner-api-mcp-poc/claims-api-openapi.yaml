@@ -1,0 +1,662 @@
+openapi: 3.1.0
+info:
+  title: Claims Business API
+  version: "1.0.0"
+  description: >
+    Third-party-facing REST API for the claims business. Covers the full
+    claim lifecycle: intake, policy verification, status transitions,
+    document evidence, adjuster notes, and settlement/payment. This is the
+    contract that the Claims MCP Server wraps for third-party AI agent
+    access.
+servers:
+  - url: https://api.claims.example.com/v1
+    description: Production
+  - url: https://sandbox-api.claims.example.com/v1
+    description: Sandbox (test data only)
+
+security:
+  - oauth2: []
+
+tags:
+  - name: Claims
+  - name: Status
+  - name: Notes
+  - name: Documents
+  - name: Policies
+  - name: Claimants
+  - name: Payments
+
+paths:
+  /claims:
+    get:
+      operationId: listClaims
+      tags: [Claims]
+      summary: List claims with optional filters
+      security:
+        - oauth2: [claims.read]
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/ClaimStatus" }
+        - name: policyNumber
+          in: query
+          schema: { type: string }
+        - name: claimantId
+          in: query
+          schema: { type: string }
+        - name: filedAfter
+          in: query
+          schema: { type: string, format: date-time }
+        - name: filedBefore
+          in: query
+          schema: { type: string, format: date-time }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        "200":
+          description: Paginated list of claims
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Claim" }
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      operationId: createClaim
+      tags: [Claims]
+      summary: File a new claim
+      security:
+        - oauth2: [claims.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClaimCreateRequest" }
+      responses:
+        "201":
+          description: Claim created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Claim" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          description: Duplicate claim (idempotency key already used with a different payload)
+
+  /claims/{claimId}:
+    parameters:
+      - $ref: "#/components/parameters/claimId"
+    get:
+      operationId: getClaim
+      tags: [Claims]
+      summary: Get a single claim by ID
+      security:
+        - oauth2: [claims.read]
+      responses:
+        "200":
+          description: Claim detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Claim" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      operationId: updateClaim
+      tags: [Claims]
+      summary: Update mutable fields on a claim (description, tags, claimant contact)
+      security:
+        - oauth2: [claims.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClaimUpdateRequest" }
+      responses:
+        "200":
+          description: Updated claim
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Claim" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Claim is closed and no longer mutable
+
+  /claims/{claimId}/status:
+    parameters:
+      - $ref: "#/components/parameters/claimId"
+    post:
+      operationId: transitionClaimStatus
+      tags: [Status]
+      summary: Transition a claim to a new status (e.g. submit for review, approve, deny, close, reopen)
+      description: >
+        Only legal transitions defined by the claims state machine are
+        accepted; an illegal transition returns 409. Approving or denying a
+        claim requires a `reason`.
+      security:
+        - oauth2: [claims.adjudicate]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [toStatus]
+              properties:
+                toStatus: { $ref: "#/components/schemas/ClaimStatus" }
+                reason: { type: string }
+                approvedAmount:
+                  type: number
+                  description: Required when toStatus=approved
+      responses:
+        "200":
+          description: Updated claim
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Claim" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Illegal status transition for the claim's current state
+
+  /claims/{claimId}/status-history:
+    parameters:
+      - $ref: "#/components/parameters/claimId"
+    get:
+      operationId: listClaimStatusHistory
+      tags: [Status]
+      summary: List the full status transition history for a claim
+      security:
+        - oauth2: [claims.read]
+      responses:
+        "200":
+          description: Ordered list of status events (oldest first)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StatusEvent" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /claims/{claimId}/notes:
+    parameters:
+      - $ref: "#/components/parameters/claimId"
+    get:
+      operationId: listClaimNotes
+      tags: [Notes]
+      summary: List notes/communications on a claim
+      security:
+        - oauth2: [claims.read]
+      parameters:
+        - name: visibility
+          in: query
+          schema: { type: string, enum: [internal, external, all], default: external }
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Note" }
+    post:
+      operationId: addClaimNote
+      tags: [Notes]
+      summary: Add a note or communication to a claim
+      security:
+        - oauth2: [claims.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string, minLength: 1, maxLength: 5000 }
+                visibility: { type: string, enum: [internal, external], default: external }
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /claims/{claimId}/documents:
+    parameters:
+      - $ref: "#/components/parameters/claimId"
+    get:
+      operationId: listClaimDocuments
+      tags: [Documents]
+      summary: List documents attached to a claim
+      security:
+        - oauth2: [documents.read]
+      responses:
+        "200":
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Document" }
+    post:
+      operationId: uploadClaimDocument
+      tags: [Documents]
+      summary: Attach a document to a claim
+      description: >
+        Provide either `sourceUrl` (a URL the API will fetch and store) or
+        `base64Content` for small inline files (<= 10MB). Exactly one must
+        be set.
+      security:
+        - oauth2: [documents.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileName, docType]
+              properties:
+                fileName: { type: string }
+                docType: { $ref: "#/components/schemas/DocumentType" }
+                mimeType: { type: string, example: "image/jpeg" }
+                sourceUrl: { type: string, format: uri }
+                base64Content: { type: string, description: "Base64-encoded file bytes, max 10MB decoded" }
+      responses:
+        "201":
+          description: Document metadata
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Document" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "413":
+          description: File exceeds maximum allowed size
+
+  /claims/{claimId}/documents/{documentId}:
+    parameters:
+      - $ref: "#/components/parameters/claimId"
+      - name: documentId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getClaimDocument
+      tags: [Documents]
+      summary: Get document metadata and a time-limited download URL
+      security:
+        - oauth2: [documents.read]
+      responses:
+        "200":
+          description: Document detail with downloadUrl
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Document" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /claimants:
+    post:
+      operationId: createClaimant
+      tags: [Claimants]
+      summary: Register a new claimant
+      security:
+        - oauth2: [claimants.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClaimantCreateRequest" }
+      responses:
+        "201":
+          description: Claimant created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Claimant" }
+
+  /claimants/{claimantId}:
+    parameters:
+      - name: claimantId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getClaimant
+      tags: [Claimants]
+      summary: Get claimant profile
+      security:
+        - oauth2: [claimants.read]
+      responses:
+        "200":
+          description: Claimant detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Claimant" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /policies/{policyNumber}:
+    parameters:
+      - name: policyNumber
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getPolicy
+      tags: [Policies]
+      summary: Get policy detail and coverage limits
+      security:
+        - oauth2: [policies.read]
+      responses:
+        "200":
+          description: Policy detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Policy" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /policies/{policyNumber}/coverage-check:
+    parameters:
+      - name: policyNumber
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: checkPolicyCoverage
+      tags: [Policies]
+      summary: Check whether a claim type/amount is within policy coverage
+      security:
+        - oauth2: [policies.read]
+      parameters:
+        - name: claimType
+          in: query
+          required: true
+          schema: { type: string }
+        - name: amount
+          in: query
+          required: true
+          schema: { type: number }
+      responses:
+        "200":
+          description: Coverage check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  covered: { type: boolean }
+                  coverageLimit: { type: number }
+                  deductible: { type: number }
+                  estimatedPayout: { type: number }
+                  notes: { type: string }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /claims/{claimId}/payments:
+    parameters:
+      - $ref: "#/components/parameters/claimId"
+    get:
+      operationId: listClaimPayments
+      tags: [Payments]
+      summary: List payments/settlements issued for a claim
+      security:
+        - oauth2: [payments.read]
+      responses:
+        "200":
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Payment" }
+    post:
+      operationId: createClaimPayment
+      tags: [Payments]
+      summary: Issue a settlement payment for an approved claim
+      description: >
+        Requires an `Idempotency-Key` header. Only claims in status
+        `approved` may receive a payment; the claim moves to `in_payment`
+        on success.
+      security:
+        - oauth2: [payments.write]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentCreateRequest" }
+      responses:
+        "201":
+          description: Payment created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Payment" }
+        "409":
+          description: Claim not in `approved` status, or Idempotency-Key reused with a different payload
+
+  /payments/{paymentId}:
+    parameters:
+      - name: paymentId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getPayment
+      tags: [Payments]
+      summary: Get payment status
+      security:
+        - oauth2: [payments.read]
+      responses:
+        "200":
+          description: Payment detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Payment" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://auth.claims.example.com/oauth2/token
+          scopes:
+            claims.read: Read claim data
+            claims.write: Create/update claims and notes
+            claims.adjudicate: Transition claim status (approve/deny/close)
+            documents.read: Read claim documents
+            documents.write: Upload claim documents
+            policies.read: Read policy and coverage data
+            claimants.read: Read claimant profiles
+            claimants.write: Create claimant profiles
+            payments.read: Read payment/settlement data
+            payments.write: Issue payments/settlements
+
+  parameters:
+    claimId:
+      name: claimId
+      in: path
+      required: true
+      schema: { type: string }
+      description: Claim ID, e.g. CLM-8841
+
+  responses:
+    BadRequest:
+      description: Invalid request payload
+    Unauthorized:
+      description: Missing or invalid bearer token
+    Forbidden:
+      description: Token lacks the required scope
+    NotFound:
+      description: Resource does not exist
+
+  schemas:
+    ClaimStatus:
+      type: string
+      enum: [submitted, under_review, approved, denied, in_payment, closed, reopened]
+
+    DocumentType:
+      type: string
+      enum: [photo, invoice, estimate, police_report, medical_record, correspondence, other]
+
+    Claim:
+      type: object
+      properties:
+        claimId: { type: string, example: "CLM-8841" }
+        policyNumber: { type: string, example: "POL-1001" }
+        claimantId: { type: string }
+        claimType: { type: string, example: "auto_glass" }
+        status: { $ref: "#/components/schemas/ClaimStatus" }
+        description: { type: string }
+        incidentDate: { type: string, format: date }
+        filedAmount: { type: number }
+        approvedAmount: { type: number, nullable: true }
+        currency: { type: string, example: "USD" }
+        adjusterId: { type: string, nullable: true }
+        tags:
+          type: array
+          items: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ClaimCreateRequest:
+      type: object
+      required: [policyNumber, claimantId, claimType, incidentDate, description, filedAmount]
+      properties:
+        policyNumber: { type: string }
+        claimantId: { type: string }
+        claimType: { type: string }
+        incidentDate: { type: string, format: date }
+        description: { type: string, maxLength: 5000 }
+        filedAmount: { type: number, minimum: 0 }
+        currency: { type: string, default: "USD" }
+        idempotencyKey:
+          type: string
+          description: Optional client-supplied key to make retried submissions safe
+
+    ClaimUpdateRequest:
+      type: object
+      properties:
+        description: { type: string, maxLength: 5000 }
+        tags:
+          type: array
+          items: { type: string }
+
+    StatusEvent:
+      type: object
+      properties:
+        eventId: { type: string }
+        claimId: { type: string }
+        fromStatus: { $ref: "#/components/schemas/ClaimStatus" }
+        toStatus: { $ref: "#/components/schemas/ClaimStatus" }
+        reason: { type: string, nullable: true }
+        actorId: { type: string }
+        occurredAt: { type: string, format: date-time }
+
+    Note:
+      type: object
+      properties:
+        noteId: { type: string }
+        claimId: { type: string }
+        authorId: { type: string }
+        authorType: { type: string, enum: [adjuster, third_party, system] }
+        body: { type: string }
+        visibility: { type: string, enum: [internal, external] }
+        createdAt: { type: string, format: date-time }
+
+    Document:
+      type: object
+      properties:
+        documentId: { type: string }
+        claimId: { type: string }
+        fileName: { type: string }
+        docType: { $ref: "#/components/schemas/DocumentType" }
+        mimeType: { type: string }
+        sizeBytes: { type: integer }
+        downloadUrl: { type: string, format: uri, description: "Time-limited signed URL" }
+        uploadedBy: { type: string }
+        uploadedAt: { type: string, format: date-time }
+
+    Claimant:
+      type: object
+      properties:
+        claimantId: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        address:
+          type: object
+          properties:
+            line1: { type: string }
+            city: { type: string }
+            state: { type: string }
+            postalCode: { type: string }
+            country: { type: string }
+
+    ClaimantCreateRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        address:
+          type: object
+          properties:
+            line1: { type: string }
+            city: { type: string }
+            state: { type: string }
+            postalCode: { type: string }
+            country: { type: string }
+
+    Policy:
+      type: object
+      properties:
+        policyNumber: { type: string }
+        policyType: { type: string }
+        holderName: { type: string }
+        state: { type: string }
+        effectiveDate: { type: string, format: date }
+        expirationDate: { type: string, format: date }
+        status: { type: string, enum: [active, lapsed, cancelled] }
+        coverages:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              limit: { type: number }
+              deductible: { type: number }
+
+    Payment:
+      type: object
+      properties:
+        paymentId: { type: string }
+        claimId: { type: string }
+        amount: { type: number }
+        currency: { type: string }
+        method: { type: string, enum: [ach, check, wire, card] }
+        payeeName: { type: string }
+        status: { type: string, enum: [pending, issued, failed, cancelled] }
+        idempotencyKey: { type: string }
+        issuedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    PaymentCreateRequest:
+      type: object
+      required: [amount, method, payeeName]
+      properties:
+        amount: { type: number, minimum: 0.01 }
+        currency: { type: string, default: "USD" }
+        method: { type: string, enum: [ach, check, wire, card] }
+        payeeName: { type: string }

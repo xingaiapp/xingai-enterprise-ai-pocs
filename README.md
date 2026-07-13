@@ -1,6 +1,6 @@
 # XingAI Enterprise AI POCs
 
-**Version:** 0.3.0
+**Version:** 0.4.0
 
 Runnable proof-of-concept projects for enterprise AI decision systems and architecture patterns.
 
@@ -27,6 +27,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 | [Multi-Agent Lab](pocs/multi-agent-lab/) | Orchestrator + specialist handoffs | Runnable · Phase 1 MVP | [Enterprise Agent Platform](docs/ENTERPRISE-AGENT-PLATFORM.md) |
 | [Claims Multi-Agent RAG](pocs/claims-multiagent-rag-poc/) | Supervisor + RAG + citations + human-in-the-loop | Runnable · Phases 1–6 | Insurance / enterprise RAG demo |
 | [Claims MCP OAuth POC](pocs/claims-mcp-oauth-poc/) | Real OAuth 2.1 + PKCE + JWT auth, two-wall authorization, Review→Adjudicate | Runnable · Phase 1 | [MCP in Production](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-11-mcp-in-production-robinhood-case.md), [OAuth PKCE Lab](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/guides/2026-07-12-mcp-oauth-pkce-lab.md) |
+| [Claims Partner API MCP POC](pocs/claims-partner-api-mcp-poc/) | Full OpenAPI-to-MCP tool coverage (18 tools/7 domains), auth deferred | Runnable · Phase 1 | [MCP API Coverage vs. Workflow Tools](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-13-mcp-api-coverage-vs-workflow-tools.md) |
 | [Event Bus AI Review](pocs/event-bus-ai-review/) | Event-driven AI decisions | Architecture Design Only | Enterprise AI decision systems |
 | Human-in-the-Loop Decision | Approval workflow | Planned | Human approval layers |
 | Memory Layer Demo | User + organization memory | Planned | Memory architectures |
@@ -70,6 +71,14 @@ See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md) and [`docs/adr/README.md`](
 See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for contribution guidelines.
 
 ## Version Notes
+
+### 0.4.0
+
+- **New POC: Claims Partner API MCP POC** (`pocs/claims-partner-api-mcp-poc/`) — a TypeScript MCP server exposing a full 18-endpoint claims-business OpenAPI contract (`claims-api-openapi.yaml`) as 18 MCP tools across 7 domains (claims, status, notes, documents, claimants, policies, payments), the API-coverage counterpart to Claims MCP OAuth POC's narrow-tools-plus-real-auth pattern — see [ADR-007](docs/adr/007-claims-partner-api-mcp-poc-full-coverage.md).
+- **Claims Partner API MCP POC: runnable mock upstream** — `mock-api/` implements every endpoint in the OpenAPI contract against in-memory fixtures (shared policy numbers/claimant names with Claims MCP OAuth POC for narrative continuity) and enforces the claim-status state machine, so the whole stack runs via `docker compose up` with no external dependency.
+- **Claims Partner API MCP POC: idempotent settlement payments** — `claims_create_payment` requires an `Idempotency-Key`; a retried call returns the original payment instead of creating a second one.
+- **Claims Partner API MCP POC: end-to-end test** (`tests/e2e.mjs`) — drives the full happy path (claimant → claim → coverage check → note → status transitions → illegal-transition rejection → settlement payment → status history) against the real running services.
+- **Claims Partner API MCP POC: explicitly no auth layer yet** — deferred by design per ADR-007; see the POC's `enterprise-mapping.md` for the plan to combine it with Claims MCP OAuth POC's Authorization Server.
 
 ### 0.3.0
 

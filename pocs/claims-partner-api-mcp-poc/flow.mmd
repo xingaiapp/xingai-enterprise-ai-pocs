@@ -1,0 +1,55 @@
+sequenceDiagram
+    participant P as Third-Party Agent
+    participant S as Claims MCP Server :3000
+    participant U as Claims Mock API :4000
+
+    P->>S: POST /mcp tools/call claims_create_claimant
+    S->>U: POST /claimants (Bearer token)
+    U-->>S: 201 Claimant {claimantId}
+    S-->>P: structuredContent: Claimant
+
+    P->>S: POST /mcp tools/call claims_check_policy_coverage
+    S->>U: GET /policies/{policyNumber}/coverage-check
+    U-->>S: 200 {covered, coverageLimit, estimatedPayout}
+    S-->>P: structuredContent: CoverageCheckResult
+
+    P->>S: POST /mcp tools/call claims_create_claim
+    S->>U: POST /claims
+    U-->>S: 201 Claim {status: submitted}
+    S-->>P: structuredContent: Claim
+
+    P->>S: POST /mcp tools/call claims_add_note
+    S->>U: POST /claims/{claimId}/notes
+    U-->>S: 201 Note
+    S-->>P: structuredContent: Note
+
+    P->>S: POST /mcp tools/call claims_transition_status (toStatus=under_review)
+    S->>U: POST /claims/{claimId}/status
+    U->>U: check isLegalTransition(submitted, under_review) -> true
+    U-->>S: 200 Claim {status: under_review}
+    S-->>P: structuredContent: Claim
+
+    P->>S: POST /mcp tools/call claims_transition_status (toStatus=approved, approvedAmount)
+    S->>U: POST /claims/{claimId}/status
+    U->>U: check isLegalTransition(under_review, approved) -> true
+    U-->>S: 200 Claim {status: approved, approvedAmount}
+    S-->>P: structuredContent: Claim
+
+    Note over P,U: Illegal-transition check (demo script step)
+    P->>S: POST /mcp tools/call claims_transition_status (toStatus=under_review)
+    S->>U: POST /claims/{claimId}/status
+    U->>U: check isLegalTransition(approved, under_review) -> false
+    U-->>S: 409 policy_violation
+    S-->>P: isError: true
+
+    P->>S: POST /mcp tools/call claims_create_payment (Idempotency-Key: k1)
+    S->>U: POST /claims/{claimId}/payments (Idempotency-Key: k1)
+    U->>U: claim.status == approved? emit StatusEvent(approved -> in_payment)
+    U-->>S: 201 Payment {status: issued}
+    S-->>P: structuredContent: Payment
+
+    Note over P,U: Idempotent retry (same Idempotency-Key)
+    P->>S: POST /mcp tools/call claims_create_payment (Idempotency-Key: k1)
+    S->>U: POST /claims/{claimId}/payments (Idempotency-Key: k1)
+    U-->>S: 201 same Payment (no second payment created)
+    S-->>P: structuredContent: Payment (identical paymentId)
