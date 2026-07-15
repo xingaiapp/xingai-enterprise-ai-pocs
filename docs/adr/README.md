@@ -12,7 +12,7 @@ Bilingual ADRs for cross-POC patterns. Convention: [BILINGUAL-ADR.md](./BILINGUA
 | [006](./006-claims-mcp-oauth-poc-real-auth.md) | Claims MCP OAuth POC — real auth, not a placeholder | [理赔 MCP OAuth POC——真实认证](./006-claims-mcp-oauth-poc-real-auth.zh.md) | Accepted |
 | [007](./007-claims-partner-api-mcp-poc-full-coverage.md) | Claims Partner API MCP POC — full API coverage, auth deferred | [理赔第三方 API MCP POC——全量覆盖，认证推迟](./007-claims-partner-api-mcp-poc-full-coverage.zh.md) | Accepted |
 | [008](./008-claims-workflow-v2-poc.md) | Claims Workflow v2 POC — runnable fraud-sequencing, escalation-routing, and compliance-audit fixes | [理赔工作流 v2 POC——三处修复的可运行实现](./008-claims-workflow-v2-poc.zh.md) | Accepted |
-| [009](./009-claims-workflow-v2-mcp-multiagent.md) | Claims Workflow v2 — MCP tool access, LLM agents, LangGraph supervisor (phased) | [理赔工作流 v2——MCP、LLM Agent、LangGraph Supervisor（分阶段）](./009-claims-workflow-v2-mcp-multiagent.zh.md) | Accepted (Phase 1 done) |
+| [009](./009-claims-workflow-v2-mcp-multiagent.md) | Claims Workflow v2 — MCP tool access, LLM agents, LangGraph supervisor (phased) | [理赔工作流 v2——MCP、LLM Agent、LangGraph Supervisor（分阶段）](./009-claims-workflow-v2-mcp-multiagent.zh.md) | Accepted (Phase 1+2+3 done) |
 
 **Next free number:** **010**.
 

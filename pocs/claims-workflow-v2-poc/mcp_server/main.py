@@ -17,6 +17,7 @@ from mcp_server.tools import (
     tool_get_audit_trail,
     tool_get_policy_coverage,
     tool_record_ledger_decision,
+    tool_search_policy_documents,
 )
 
 app = FastAPI(title="Claims Workflow MCP Server")
@@ -32,6 +33,20 @@ TOOLS = [
                 "loss_type": {"type": "string"},
             },
             "required": ["policy_id", "loss_type"],
+        },
+        "scope_required": "policy.read",
+    },
+    {
+        "name": "search_policy_documents",
+        "description": "Retrieve the top-k most relevant policy clause chunks for a query (e.g. a claim's loss_description)",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "policy_id": {"type": "string"},
+                "query": {"type": "string"},
+                "k": {"type": "integer"},
+            },
+            "required": ["policy_id", "query"],
         },
         "scope_required": "policy.read",
     },
@@ -86,6 +101,7 @@ TOOLS = [
 
 _TOOL_IMPLS = {
     "get_policy_coverage": tool_get_policy_coverage,
+    "search_policy_documents": tool_search_policy_documents,
     "record_ledger_decision": tool_record_ledger_decision,
     "get_audit_trail": tool_get_audit_trail,
     "create_payment": tool_create_payment,

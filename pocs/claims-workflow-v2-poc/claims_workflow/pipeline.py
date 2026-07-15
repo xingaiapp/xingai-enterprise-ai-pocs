@@ -1,47 +1,31 @@
 """Claims Settlement Workflow v2 — orchestrator.
 
-Two entry points instead of one run_claim() loop, because the design this
-implements requires a real pause/resume boundary at escalation:
+Per ADR-009 Phase 3, submit_claim/resume_claim now run a LangGraph
+StateGraph (claims_workflow/graph/supervisor_graph.py) instead of the
+hand-written _continue_from_triage / _continue_from_coverage /
+_continue_from_approval branch-jumping ADR-008 originally shipped — same
+agent functions as nodes, same control flow, just expressed as a graph
+instead of nested if/return. Two entry points, unchanged from ADR-008:
 
   submit_claim(claim)                -> runs until settlement, denial, or
                                          the first escalation
   resume_claim(claim, ledger, human) -> Case Resolution Router decides
                                          exactly which stage to resume at
-
-This mirrors how the pipeline would actually be called from an API: submit
-returns immediately if a human needs to look at the claim, and a separate
-call resumes it once they have.
 """
 from __future__ import annotations
 
 from typing import Tuple
 
-from .agents.approval import run_approval
-from .agents.damage_assessment import run_damage_assessment
-from .agents.doc_verification import run_doc_verification
-from .agents.fraud_scoring import run_fraud_scoring
-from .agents.fraud_triage import run_fraud_triage
-from .agents.intake import run_intake
-from .agents.payment import run_payment
-from .agents.policy_coverage import run_policy_coverage
 from .agents.router import resolve_case
+from .graph.supervisor_graph import run_from
 from .ledger import DecisionLedger
 from .models import Claim
 
 
 def submit_claim(claim: Claim, ledger: DecisionLedger | None = None) -> Tuple[Claim, DecisionLedger]:
     ledger = ledger or DecisionLedger()
-
-    if run_intake(claim, ledger) == "stop":
-        return claim, ledger
-
-    if run_doc_verification(claim, ledger) == "escalate":
-        return claim, ledger
-
-    if run_fraud_triage(claim, ledger) == "escalate":
-        return claim, ledger
-
-    return _continue_from_triage(claim, ledger)
+    run_from(claim, ledger, "intake")
+    return claim, ledger
 
 
 def resume_claim(claim: Claim, ledger: DecisionLedger, human_decision: dict) -> Tuple[Claim, DecisionLedger]:
@@ -51,26 +35,6 @@ def resume_claim(claim: Claim, ledger: DecisionLedger, human_decision: dict) -> 
         raise ValueError(f"claim {claim.claim_id} is not currently escalated")
 
     target = resolve_case(claim, ledger, human_decision)
-
-    if target == "doc_verification":
-        if run_doc_verification(claim, ledger) == "escalate":
-            return claim, ledger
-        if run_fraud_triage(claim, ledger) == "escalate":
-            return claim, ledger
-        return _continue_from_triage(claim, ledger)
-
-    if target == "damage_assessment":
-        return _continue_from_triage(claim, ledger)
-
-    if target == "policy_coverage":
-        return _continue_from_coverage(claim, ledger)
-
-    if target == "approval":
-        return _continue_from_approval(claim, ledger)
-
-    if target == "payment":
-        run_payment(claim, ledger)
-        return claim, ledger
 
     if target in ("deny_fraud", "deny_upheld"):
         claim.status = "denied"
@@ -88,25 +52,5 @@ def resume_claim(claim: Claim, ledger: DecisionLedger, human_decision: dict) -> 
         )
         return claim, ledger
 
-    return claim, ledger
-
-
-def _continue_from_triage(claim: Claim, ledger: DecisionLedger) -> Tuple[Claim, DecisionLedger]:
-    run_damage_assessment(claim, ledger)
-    if run_fraud_scoring(claim, ledger) == "escalate":
-        return claim, ledger
-    return _continue_from_coverage(claim, ledger)
-
-
-def _continue_from_coverage(claim: Claim, ledger: DecisionLedger) -> Tuple[Claim, DecisionLedger]:
-    coverage = run_policy_coverage(claim, ledger)
-    if coverage in ("escalate", "deny"):
-        return claim, ledger
-    return _continue_from_approval(claim, ledger)
-
-
-def _continue_from_approval(claim: Claim, ledger: DecisionLedger) -> Tuple[Claim, DecisionLedger]:
-    if run_approval(claim, ledger) == "escalate":
-        return claim, ledger
-    run_payment(claim, ledger)
+    run_from(claim, ledger, target)
     return claim, ledger

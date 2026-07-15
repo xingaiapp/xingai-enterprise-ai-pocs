@@ -1,7 +1,7 @@
 # ADR-009:理赔工作流 v2——深化为真实 MCP 工具访问、LLM Agent 与 LangGraph Supervisor
 
 **日期:** 2026-07-15
-**状态:** 已采纳(Phase 1 已实现;Phase 2/3 已规划,尚未开始)
+**状态:** 已采纳(Phase 1、2、3 均已实现)
 **作者:** Xing @ XingAI
 **其他语言:** [English](009-claims-workflow-v2-mcp-multiagent.md)
 
@@ -74,14 +74,26 @@
 - Phase 1 的静态内部服务 token 明确不适合用于本仓库进程边界之外;只扫一眼"决策"部分、漏看"现在实际做的是什么"的读者,可能会把 scope 命名对齐误认为已经有真实的 OAuth 强制执行——目前还没有。
 - 引入 LangGraph 依赖(Phase 3)是本 POC 第一个非 FastAPI/pydantic 的运行时依赖,`claims-multiagent-rag-poc` 出于同样理由(真正的 supervisor 模式)已经接受过同样的权衡。
 
+## Phase 2 实现笔记
+
+有两件事在写代码之前、光看上面那张表是看不出来的:
+
+- **`complete_json`/`complete_text` 需要自己再加一层防护,不能只靠 `_call_anthropic` 内部的 try/except。** `tests/test_llm_fallback.py` 最初的版本直接 monkeypatch `llm_client._call_anthropic` 来模拟网络故障——这样做会把那个函数自己内部的 try/except 整个绕过去(monkeypatch 替换的是整个函数体),导致一个原始的 `RuntimeError` 直接穿过 `complete_json`、穿过每个 Agent 的 `except llm_client.LLMError`,让测试直接失败,而不是触发它本来要测试的兜底逻辑。修复方式是加了 `_safe_call_anthropic()`,在 `complete_json`/`complete_text` 内部再包一层,捕获任何异常——不只是 `_call_anthropic` 自己选择包装过的那些——统一重新抛成 `LLMError`。这不是为了迁就测试而打的补丁,而是真正正确的修法:每个 Agent 的兜底逻辑都依赖"只捕获 `LLMError`"这一条,保证这一条成立的边界就应该不止一层。
+- **RAG 在这里不需要向量数据库也能真正有用。** Policy Coverage 的语料库每个保单只有几个条款片段(承保范围、除外条款、条件)——一个纯 Python 的哈希词袋向量化(`mcp_server/rag.py`,约 40 行,不用 numpy)就足够检索出"赛车时出的事故"这类查询对应的除外条款。这让本 POC 的依赖清单完全没变(还是只有 `fastapi`/`pydantic`/`httpx`/`anthropic`),没有像 `claims-multiagent-rag-poc` 那样为了跨保单检索这个更大的问题引入 `chromadb`——提醒自己"加 RAG"不等于"必须加向量数据库",尤其是当每次查询的语料库本来就小、而且提前知道范围的时候(这里始终只在一个已知的 `policy_id` 内检索,从来不做跨保单搜索)。
+
+## Phase 3 实现笔记
+
+Case Resolution Router 需要让理赔恢复到一个*具体*环节——LangGraph 通常靠持久化的 checkpoint 加 `thread_id`,以后再恢复来做这件事。本 POC 不需要跨进程恢复(一次理赔的解决,从 Phase 0/1/2 到现在,始终是在一次 `resume_claim()` 调用内同步完成的),所以 `build_graph(entry_point)` 改成每次都编译一个从 Router 选中的那个环节开始的全新 `StateGraph`,复用同样的八个节点函数,而不是复用同一个编译好的图对象。这是对真正 LangGraph checkpoint 机制的一次刻意的、缩小范围的替代——在这里明确写出来,而不是悄悄当成同一回事:如果这套模式要用于生产(一次理赔真的暂停几小时甚至几天等人工处理,再由另一个进程恢复),就需要本 POC 有意没有实现的那套真正的 checkpoint/thread_id 机制。
+
 ## 实现状态
 
 - [x] `mcp_server/`——JSON-RPC `/mcp` 端点、4 个工具(`get_policy_coverage`、`record_ledger_decision`、`get_audit_trail`、`create_payment`)、静态内部服务 token、scope 命名对齐 `claims-mcp-oauth-poc`/`claims-partner-api-mcp-poc`
 - [x] `claims_workflow.ledger.DecisionLedger` 以及承保核实/赔付两个 Agent 已改为通过 MCP client(`claims_workflow/mcp_client.py`)调工具,不再直接访问字典
 - [x] 现有 26 个测试在 MCP 化实现下全部通过,行为无变化(除了 `tests/conftest.py` 的重置 fixture 改成重置 MCP server 的存储而不是本地字典,其余测试文件未改动即验证通过)
-- [ ] Phase 2:Fraud Triage / Fraud Scoring / Policy Coverage(RAG)/ 拒赔信起草 换成真 LLM Agent,带启发式兜底
-- [ ] `tests/eval/`——跑真实 LLM 路径的 eval 标记测试
-- [ ] Phase 3:LangGraph `StateGraph` Supervisor 取代 `pipeline.py` 手写的分支跳转
+- [x] Phase 2:Fraud Triage / Fraud Scoring / Policy Coverage(RAG)/ 拒赔信起草 已换成真 LLM Agent,带启发式兜底——每个都根据 `llm_client.is_available()` 分流,遇到任何 `LLMError` 就回退到未改动的 ADR-008 启发式实现(`model_version` 标注 `-fallback-after-llm-error`)
+- [x] Policy Coverage 的 RAG 路径:用一个依赖轻量的哈希词袋向量化(`mcp_server/rag.py`,纯 Python,不用向量数据库)在一个按保单分组的小型条款语料库(`mcp_server/policy_documents.py`,包含扁平的 `MOCK_POLICIES` 字典表达不了的除外条款)上做检索——通过一个新的 `search_policy_documents` MCP 工具(scope 用的是已有的 `policy.read`,不是新增的)
+- [x] `tests/eval/`——5 个跑真实 LLM 路径的 eval 标记测试(`pytest -m eval`,没有 `ANTHROPIC_API_KEY` 时自动跳过);`tests/test_llm_fallback.py` 里另有 14 个非 eval 测试,直接 monkeypatch `llm_client._call_anthropic` 来测试 JSON 解析、分流、出错回退,不需要真实 key——一共 40 个测试全部通过(`pytest.ini`:`addopts = -m "not eval"` 让 eval 测试默认不跑)
+- [x] Phase 3:LangGraph `StateGraph` Supervisor(`claims_workflow/graph/supervisor_graph.py`)已取代 `pipeline.py` 手写的分支跳转——同样的 8 个 Agent 函数作为图节点,条件边完整复现原来的控制流,用完整的 40 个测试加一次手动 submit→escalate→resume 跑通验证过
 - [ ] Phase 4(尚未排期):把 `claims-mcp-oauth-poc` 的 Authorization Server 接到 `mcp-server/` 前面,支持真实第三方访问
 
 ## 相关

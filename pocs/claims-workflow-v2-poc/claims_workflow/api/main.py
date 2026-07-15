@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Tuple
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from ..agents.adverse_action_letter import draft_letter
 from ..ledger import DecisionLedger
 from ..models import Claim, Photo
 from ..pipeline import resume_claim, submit_claim
@@ -43,6 +44,7 @@ class SubmitClaimRequest(BaseModel):
     documents: List[str] = Field(default_factory=list)
     photos: List[PhotoIn] = Field(default_factory=list)
     assessed_cost_hint: Optional[float] = None
+    loss_description: str = ""
 
 
 class ResolveEscalationRequest(BaseModel):
@@ -94,6 +96,7 @@ def submit(body: SubmitClaimRequest) -> ClaimOut:
         documents=body.documents,
         photos=[Photo(url=p.url, reused=p.reused) for p in body.photos],
         assessed_cost_hint=body.assessed_cost_hint,
+        loss_description=body.loss_description,
     )
     claim, ledger = submit_claim(claim)
     _CLAIMS[claim.claim_id] = (claim, ledger)
@@ -155,7 +158,7 @@ def adverse_action_letter(claim_id: str) -> dict:
     if claim_id not in _CLAIMS:
         raise HTTPException(status_code=404, detail="claim not found")
     _, ledger = _CLAIMS[claim_id]
-    letter = ledger.adverse_action_letter(claim_id)
+    letter = draft_letter(ledger, claim_id)
     if letter is None:
         raise HTTPException(status_code=404, detail="no adverse action recorded for this claim")
     return letter

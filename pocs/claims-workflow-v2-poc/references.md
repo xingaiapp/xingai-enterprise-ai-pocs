@@ -8,6 +8,7 @@
 - 中文: [第三方 MCP 访问——用 API Key 还是 OAuth 2.1?](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-15-third-party-mcp-auth-api-key-vs-oauth2.zh.md)
 - [Claims Settlement Workflow v2 diagram](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/assets/ARCHITECTURE-DIAGRAMS.md#claims-settlement-workflow-v2-xingai-corrected-design)
 - `xingai-engineering-system/patterns/decision-ledger-schema.md` — the shared schema `ledger.py` implements
+- [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) · [中文](PRODUCTION-READINESS.zh.md) — this POC's own production-readiness gap analysis (AI agent / MCP / automation / claims-industry-regulatory)
 
 ## XingAI ADRs & Platform
 
@@ -36,3 +37,4 @@
 - Real ML models for Fraud Triage / Fraud Scoring (heuristic rules only today)
 - Real policy administration system integration (`MOCK_POLICIES` is a fixture)
 - Multi-tenant isolation, rate limiting, observability
+- Full gap analysis, organized and prioritized: [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) · [中文](PRODUCTION-READINESS.zh.md)

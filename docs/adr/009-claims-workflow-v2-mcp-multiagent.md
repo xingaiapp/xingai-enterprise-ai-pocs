@@ -1,7 +1,7 @@
 # ADR-009: Claims Workflow v2 — Deepening into Real MCP Tool Access, LLM Agents, and a LangGraph Supervisor
 
 **Date:** 2026-07-15
-**Status:** Accepted (Phase 1 implemented; Phase 2/3 planned, not started)
+**Status:** Accepted (Phase 1, 2, and 3 implemented)
 **Author:** Xing @ XingAI
 **Also available:** [中文](009-claims-workflow-v2-mcp-multiagent.zh.md)
 
@@ -72,15 +72,27 @@ Tradeoffs:
 - Phase 1's static internal service token is explicitly not safe past this repo's own process boundary; a reader who only skims the "Decision" section and misses "What's actually built now" could mistake the scope-name alignment for actual OAuth enforcement, which does not exist yet.
 - Adding a LangGraph dependency (Phase 3) introduces this POC's first non-FastAPI/pydantic runtime dependency, same tradeoff `claims-multiagent-rag-poc` already accepted for the same reason (real supervisor pattern).
 
+## Phase 2 implementation notes
+
+Two things worth recording that weren't obvious from the Phase 2 table above until the code was written:
+
+- **`complete_json`/`complete_text` need their own defense against a misbehaving `_call_anthropic`, not just the try/except already inside it.** The first version of `tests/test_llm_fallback.py` monkeypatched `llm_client._call_anthropic` directly to simulate a network failure — which bypassed that function's own internal try/except entirely (monkeypatching replaces the whole function body) and let a raw `RuntimeError` propagate past `complete_json`, past every agent's `except llm_client.LLMError`, and fail the test instead of triggering the fallback path it was supposed to test. Fixed by adding `_safe_call_anthropic()`, a second wrapping layer inside `complete_json`/`complete_text` that catches any exception — not just ones `_call_anthropic` itself chose to wrap — and re-raises as `LLMError`. This is the correct fix, not a workaround for the test: every agent's fallback logic depends on catching exactly `LLMError`, so the boundary that guarantees that has to be enforced at more than one layer.
+- **RAG didn't need a vector database to be genuinely useful here.** Policy Coverage's corpus is a handful of clause chunks per policy (coverage grant, exclusions, conditions) — a hashing-trick bag-of-words embedding in pure Python (`mcp_server/rag.py`, ~40 lines, no numpy) is enough to retrieve the right exclusion clause for a query like "was racing when the loss occurred." This keeps the POC's dependency footprint exactly where it was (still just `fastapi`/`pydantic`/`httpx`/`anthropic`) instead of adding `chromadb` the way `claims-multiagent-rag-poc` did for its larger, cross-policy retrieval problem — a reminder that "add RAG" doesn't always mean "add a vector database," especially when the corpus per query is small and known in advance (here, scoped to one `policy_id` at a time, never a cross-policy search).
+
+## Phase 3 implementation note
+
+The Case Resolution Router needs to resume a claim at a *specific* stage — LangGraph's usual mechanism for that is a persisted checkpoint plus a `thread_id`, resumed later. This POC doesn't need cross-process resume (a claim is fully resolved synchronously within one `resume_claim()` call, same as Phase 0/1/2), so `build_graph(entry_point)` instead compiles a fresh `StateGraph` starting at whichever stage the router picked, reusing the same eight node functions every time rather than the same compiled graph object. This is a deliberate, scoped-down substitute for real LangGraph checkpointing — noted here rather than silently presented as the same thing, since a production version of this pattern (a claim genuinely paused for hours or days awaiting a human, resumed by a different process) would need the real checkpoint/thread_id mechanism this POC intentionally didn't build.
+
 ## Implementation status
 
 - [x] `mcp_server/` — JSON-RPC `/mcp` endpoint, 4 tools (`get_policy_coverage`, `record_ledger_decision`, `get_audit_trail`, `create_payment`), static internal service token, scope names aligned with `claims-mcp-oauth-poc`/`claims-partner-api-mcp-poc`
 - [x] `claims_workflow.ledger.DecisionLedger` and the policy-coverage/payment agents rewired to call MCP tools via a thin client (`claims_workflow/mcp_client.py`) instead of direct dict access
 - [x] All 26 existing tests pass against the MCP-backed implementation, no behavior change (verified by re-running the full suite unmodified except `tests/conftest.py`'s reset fixture, which now resets the MCP server's store instead of a local dict)
-- [ ] Phase 2: Fraud Triage / Fraud Scoring / Policy Coverage (RAG) / adverse-action-letter drafting as real LLM-backed agents with heuristic fallback
-- [ ] `tests/eval/` — eval-marked tests exercising the real LLM path
-- [ ] Phase 3: LangGraph `StateGraph` supervisor replacing `pipeline.py`'s hand-written branch-jumping
-- [ ] Phase 4 (not scheduled): `claims-mcp-oauth-poc` Authorization Server wired in front of `mcp-server/` for real third-party access
+- [x] Phase 2: Fraud Triage / Fraud Scoring / Policy Coverage (RAG) / adverse-action-letter drafting as real LLM-backed agents with heuristic fallback — each dispatches on `llm_client.is_available()`, falls back to its unchanged ADR-008 heuristic (tagged `-fallback-after-llm-error` in `model_version`) on any `LLMError`
+- [x] Policy Coverage's RAG path: a dependency-light hashing-trick embedding (`mcp_server/rag.py`, pure Python, no vector DB) over a small per-policy clause corpus (`mcp_server/policy_documents.py`, including exclusion clauses the flat `MOCK_POLICIES` dict can't express) — retrieved via a new `search_policy_documents` MCP tool (scope `policy.read`, reused, not new)
+- [x] `tests/eval/` — 5 eval-marked tests exercising the real LLM path (`pytest -m eval`, auto-skipped without `ANTHROPIC_API_KEY`); 14 additional non-eval tests in `tests/test_llm_fallback.py` monkeypatch `llm_client._call_anthropic` directly to test JSON-parsing, dispatch, and fallback-on-error without a real key — 40 tests total, all passing (`pytest.ini`: `addopts = -m "not eval"` keeps eval tests out of the default run)
+- [x] Phase 3: LangGraph `StateGraph` supervisor (`claims_workflow/graph/supervisor_graph.py`) replacing `pipeline.py`'s hand-written branch-jumping — same 8 agent functions as graph nodes, conditional edges reproduce the exact same control flow, verified against the full 40-test suite plus a manual submit→escalate→resume run
+- [ ] Phase 4 (not scheduled): `claims-mcp-oauth-poc` Authorization Server wired in front of `mcp_server/` for real third-party access
 
 ## Related
 

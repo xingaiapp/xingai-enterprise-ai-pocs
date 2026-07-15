@@ -7,12 +7,24 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from . import store
+from . import rag, store
 
 
 def tool_get_policy_coverage(policy_id: str, loss_type: str) -> dict:
     """Scope required: policy.read"""
     return store.get_policy_coverage(policy_id, loss_type)
+
+
+def tool_search_policy_documents(policy_id: str, query: str, k: int = 3) -> dict:
+    """Scope required: policy.read
+
+    Phase 2 addition (ADR-009): retrieves the top-k most relevant policy
+    clause chunks for a query (e.g. the claim's loss_description) instead
+    of returning a single flat {covered: bool}. Used by Policy Coverage's
+    LLM path so a coverage decision — and its adverse-action citation —
+    comes from actual clause text.
+    """
+    return {"chunks": rag.search_policy_documents(policy_id, query, k)}
 
 
 def tool_record_ledger_decision(

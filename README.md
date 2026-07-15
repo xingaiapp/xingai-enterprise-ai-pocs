@@ -1,6 +1,6 @@
 # XingAI Enterprise AI POCs
 
-**Version:** 0.5.1
+**Version:** 0.7.1
 
 Runnable proof-of-concept projects for enterprise AI decision systems and architecture patterns.
 
@@ -28,7 +28,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 | [Claims Multi-Agent RAG](pocs/claims-multiagent-rag-poc/) | Supervisor + RAG + citations + human-in-the-loop | Runnable · Phases 1–6 | Insurance / enterprise RAG demo |
 | [Claims MCP OAuth POC](pocs/claims-mcp-oauth-poc/) | Real OAuth 2.1 + PKCE + JWT auth, two-wall authorization, Review→Adjudicate | Runnable · Phase 1 | [MCP in Production](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-11-mcp-in-production-robinhood-case.md), [OAuth PKCE Lab](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/guides/2026-07-12-mcp-oauth-pkce-lab.md) |
 | [Claims Partner API MCP POC](pocs/claims-partner-api-mcp-poc/) | Full OpenAPI-to-MCP tool coverage (18 tools/7 domains), auth deferred | Runnable · Phase 1 | [MCP API Coverage vs. Workflow Tools](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-13-mcp-api-coverage-vs-workflow-tools.md) |
-| [Claims Workflow v2 POC](pocs/claims-workflow-v2-poc/) | Split fraud triage/scoring, Case Resolution Router, compliance audit trail; Phase 1 MCP data boundary | Runnable · Phase 1 (+ ADR-009 MCP) | [Redesigning the Agentic Claims Workflow](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-14-claims-workflow-redesign-fraud-routing-audit.md), [Third-Party MCP Auth](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-15-third-party-mcp-auth-api-key-vs-oauth2.md) |
+| [Claims Workflow v2 POC](pocs/claims-workflow-v2-poc/) | Split fraud triage/scoring, Case Resolution Router, compliance audit trail; MCP data boundary, LLM agents + RAG, LangGraph supervisor | Runnable · Phase 1+2+3 (ADR-009) | [Redesigning the Agentic Claims Workflow](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-14-claims-workflow-redesign-fraud-routing-audit.md), [Third-Party MCP Auth](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-15-third-party-mcp-auth-api-key-vs-oauth2.md) |
 | [Event Bus AI Review](pocs/event-bus-ai-review/) | Event-driven AI decisions | Architecture Design Only | Enterprise AI decision systems |
 | Human-in-the-Loop Decision | Approval workflow | Planned | Human approval layers |
 | Memory Layer Demo | User + organization memory | Planned | Memory architectures |
@@ -74,6 +74,23 @@ See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md) and [`docs/adr/README.md`](
 See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for contribution guidelines.
 
 ## Version Notes
+
+### 0.7.1
+
+- **Claims Workflow v2 POC: production-readiness gap analysis** — new `PRODUCTION-READINESS.md` (EN + 中文) organizes what's missing before a real pilot across four lenses: AI agent layer (prompt-injection risk on the free-text `loss_description` field, uncalibrated heuristic thresholds, no model risk governance, no LLM cost controls), MCP layer (tool versioning, call resilience, ledger retention), automation/ops (observability, DR, load testing, canary rollout), and claims-industry-specific regulatory concerns not covered by a generic production checklist (prompt-payment law deadlines, SIU/fraud-bureau reporting, jurisdiction-aware adverse-action letters, PII handling around the LLM call, model change management). Linked from the POC's README, `references.md`, and `docs/adr/README.md`.
+- **`docs/adr/README.md` correction** — ADR-009's status column updated from "Phase 1+2 done" to "Phase 1+2+3 done" (Phase 3 was completed and documented but the index row was missed at the time).
+
+### 0.7.0
+
+- **Claims Workflow v2 Phase 3: LangGraph supervisor (ADR-009)** — `pipeline.py`'s hand-written `_continue_from_triage`/`_continue_from_coverage`/`_continue_from_approval` branch-jumping is replaced by a `StateGraph` (`claims_workflow/graph/supervisor_graph.py`) built from the same 8 agent functions as nodes. The Case Resolution Router's "resume at a specific stage" requirement is handled by compiling a fresh graph per call starting at the router's chosen entry point, rather than real LangGraph checkpointing — a deliberate, documented scope reduction (a claim is still resolved synchronously within one call, not paused across processes).
+- All 40 existing tests pass unmodified against the graph-based implementation; verified with an additional manual submit→escalate→resume run and a `-W error::DeprecationWarning` pass with zero warnings.
+- `architecture.md` rewritten to reflect the full Phase 1/2/3 shape (was still describing the ADR-008-only version); `enterprise-mapping.md` updated with the graph, RAG, and MCP-auth-upgrade rows.
+
+### 0.6.0
+
+- **Claims Workflow v2 Phase 2 LLM agents (ADR-009)** — Fraud Triage, Fraud Scoring, Policy Coverage, and adverse-action-letter drafting now run as real Claude-backed agents when `ANTHROPIC_API_KEY` is set, each falling back to its unchanged Phase 1 heuristic (tagged `-fallback-after-llm-error`) on any failure. Policy Coverage's LLM path adds a dependency-light RAG layer (`mcp_server/rag.py`, `mcp_server/policy_documents.py` — pure Python hashing-trick embeddings, no vector DB) that retrieves real clause text including exclusions, so it can deny a claim the flat coverage lookup would call "covered."
+- **Claims Workflow v2 POC: 40 tests, zero API keys for the default run** — 14 new tests in `tests/test_llm_fallback.py` monkeypatch the LLM call directly to verify JSON parsing, dispatch, and error fallback; 5 new eval-marked tests in `tests/eval/` exercise the real model and only run with `pytest -m eval` (`pytest.ini`: `addopts = -m "not eval"` keeps them out of the default suite, same pattern `claims-multiagent-rag-poc` uses for its offline-embeddings fallback).
+- **New design article: Third-Party MCP Access — API Key or OAuth 2.1?** (`xingai-enterprise-ai-design`, 2026-07-15) — generalizes ADR-006/007/009's auth reasoning into a reusable decision framework, using this repo's three claims MCP POCs as the worked example.
 
 ### 0.5.1
 

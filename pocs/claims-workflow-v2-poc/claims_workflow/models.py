@@ -43,6 +43,15 @@ class Claim:
     documents: List[str] = field(default_factory=list)
     photos: List[Photo] = field(default_factory=list)
 
+    # Free-text narrative from the claimant, e.g. "rear-ended at a red light,
+    # other driver's insurance disputed fault." Phase 1's heuristic agents
+    # never read this (a pure threshold rule can't reason about prose) — it
+    # exists specifically for the Phase 2 LLM-backed Fraud Triage/Scoring
+    # agents, which can weigh inconsistent or vague narratives the way an
+    # adjuster would. Optional and empty by default so every ADR-008 test
+    # that doesn't set it is unaffected.
+    loss_description: str = ""
+
     # Optional test/demo hook: lets a scenario specify what Damage
     # Assessment "finds" independent of what the claimant reported, so
     # cost-inflation fraud can be simulated deterministically. If unset,
