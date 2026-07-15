@@ -1,0 +1,7 @@
+services:
+  claims-workflow-v2:
+    build: .
+    ports:
+      - "8091:8091"
+    environment:
+      - PYTHONUNBUFFERED=1

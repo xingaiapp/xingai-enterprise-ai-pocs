@@ -1,0 +1,45 @@
+flowchart TD
+    IN[Claim submitted] --> INT[Intake Agent]
+    INT -->|missing fields| REJ[Rejected: incomplete]
+    INT --> DOC[Document Verification]
+    DOC -->|missing docs| ROUTER
+    DOC --> TRI[Fraud Triage Agent<br/>velocity + tenure only]
+    TRI -->|obvious fraud| ROUTER
+    TRI --> DMG[Damage Assessment Agent]
+    DMG --> SCO[Fraud Scoring Agent<br/>cost anomaly + photo forensics]
+    SCO -->|fraud signal| ROUTER
+    SCO --> COV[Policy Coverage Agent]
+    COV -->|not covered| DENY[Claim Not Payable]
+    COV -->|over limit| ROUTER
+    COV --> APR[Approval Agent]
+    APR -->|over threshold| ROUTER
+    APR --> PAY[Payment Agent<br/>idempotency key]
+    PAY --> DONE[Claim Paid]
+
+    ROUTER{Case Resolution Router}
+    ROUTER -->|missing_docs resolved| DOC
+    ROUTER -->|fraud cleared, pre-assessment| DMG
+    ROUTER -->|fraud cleared, post-assessment| COV
+    ROUTER -->|fraud confirmed| DENY
+    ROUTER -->|estimate adjusted| APR
+    ROUTER -->|high-value approved| PAY
+    ROUTER -->|upheld / unrecognized| DENY
+
+    AUD[(Compliance & Audit Trail<br/>Decision Ledger)]
+    INT -.-> AUD
+    DOC -.-> AUD
+    TRI -.-> AUD
+    DMG -.-> AUD
+    SCO -.-> AUD
+    COV -.-> AUD
+    APR -.-> AUD
+    ROUTER -.-> AUD
+    PAY -.-> AUD
+    DENY -.-> AUD
+
+    style TRI fill:#c9d6ff
+    style SCO fill:#c9d6ff
+    style ROUTER fill:#ffe0a3
+    style AUD fill:#d9d9d9
+    style DENY fill:#ffb3b3
+    style DONE fill:#b3ffb3

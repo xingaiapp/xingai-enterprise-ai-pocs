@@ -1,6 +1,6 @@
 # XingAI Enterprise AI POCs
 
-**Version:** 0.4.0
+**Version:** 0.5.0
 
 Runnable proof-of-concept projects for enterprise AI decision systems and architecture patterns.
 
@@ -28,6 +28,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 | [Claims Multi-Agent RAG](pocs/claims-multiagent-rag-poc/) | Supervisor + RAG + citations + human-in-the-loop | Runnable · Phases 1–6 | Insurance / enterprise RAG demo |
 | [Claims MCP OAuth POC](pocs/claims-mcp-oauth-poc/) | Real OAuth 2.1 + PKCE + JWT auth, two-wall authorization, Review→Adjudicate | Runnable · Phase 1 | [MCP in Production](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-11-mcp-in-production-robinhood-case.md), [OAuth PKCE Lab](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/guides/2026-07-12-mcp-oauth-pkce-lab.md) |
 | [Claims Partner API MCP POC](pocs/claims-partner-api-mcp-poc/) | Full OpenAPI-to-MCP tool coverage (18 tools/7 domains), auth deferred | Runnable · Phase 1 | [MCP API Coverage vs. Workflow Tools](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-13-mcp-api-coverage-vs-workflow-tools.md) |
+| [Claims Workflow v2 POC](pocs/claims-workflow-v2-poc/) | Split fraud triage/scoring, Case Resolution Router, cross-cutting compliance audit trail | Runnable · Phase 1 | [Redesigning the Agentic Claims Workflow](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-14-claims-workflow-redesign-fraud-routing-audit.md) |
 | [Event Bus AI Review](pocs/event-bus-ai-review/) | Event-driven AI decisions | Architecture Design Only | Enterprise AI decision systems |
 | Human-in-the-Loop Decision | Approval workflow | Planned | Human approval layers |
 | Memory Layer Demo | User + organization memory | Planned | Memory architectures |
@@ -40,6 +41,8 @@ pocs/
   multi-agent-lab/
   claims-multiagent-rag-poc/
   claims-mcp-oauth-poc/
+  claims-partner-api-mcp-poc/
+  claims-workflow-v2-poc/
   event-bus-ai-review/
   human-in-the-loop-decision/
   memory-layer-demo/
@@ -71,6 +74,13 @@ See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md) and [`docs/adr/README.md`](
 See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for contribution guidelines.
 
 ## Version Notes
+
+### 0.5.0
+
+- **New POC: Claims Workflow v2 POC** (`pocs/claims-workflow-v2-poc/`) — a runnable Python implementation of the three fixes proposed in `xingai-enterprise-ai-design`'s claims-workflow redesign article: fraud detection split into pre-assessment Triage and post-assessment Scoring agents, a Case Resolution Router that resumes at a specific stage instead of restarting from intake, and a Decision-Ledger-shaped Compliance & Audit Trail every stage writes to — see [ADR-008](docs/adr/008-claims-workflow-v2-poc.md).
+- **Claims Workflow v2 POC: 26 tests, one module per fix** — `test_fraud_sequencing.py` proves Triage can't see cost-inflation fraud and Scoring can; `test_router.py` proves every escalation resumes at a specific stage (never intake) and unrecognized outcomes default to a safe deny, not a silent restart; `test_audit_trail.py` proves every stage logs to the ledger and denials produce a clause-citing adverse-action letter.
+- **Claims Workflow v2 POC: router had to become stage-aware** — implementing the design article's routing table against a genuinely two-stage fraud pipeline surfaced a case the article didn't disambiguate (a Triage-stage fraud clearance still needs Damage Assessment + Fraud Scoring to run; a Scoring-stage clearance doesn't) — see the POC's "Lessons Learned" and ADR-008.
+- **Claims Workflow v2 POC: idempotent payments**, same pattern as Claims Partner API MCP POC — a retried settlement for the same claim returns the original record and logs the replay instead of paying twice.
 
 ### 0.4.0
 
