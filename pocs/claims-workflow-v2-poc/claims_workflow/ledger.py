@@ -1,23 +1,18 @@
-"""Decision Ledger — the Compliance & Audit Trail Agent's backing store (Fix 3).
+"""Decision Ledger — client-side view onto mcp_server's audit-trail tools.
 
-Same row shape as `xingai-engineering-system/patterns/decision-ledger-schema.md`,
-already adopted by several XingAI products (most recently `xingai-learn`
-ADR-003) and reused here as the claims-domain compliance backbone: one
-immutable row per decision, with `reasoning`, `confidence`, a pointer to the
-model/heuristic version that produced it, and — specific to this domain —
-an `adverse_action` + `policy_clause` pair so a denial can produce a real
-adverse-action letter instead of a generic "claim denied" message.
-
-In-memory only, per POC-STANDARDS.md precedent (see claims-mcp-oauth-poc's
-MOCK_CLAIMS): a real deployment persists this table and never lets it be
-mutated or deleted, only appended to.
+Per ADR-009 Phase 1, the actual rows now live in mcp_server.store, reached
+through record_ledger_decision / get_audit_trail. This class keeps the
+exact public API it had in ADR-008 (record / all / for_claim /
+adverse_action_letter) so every agent file and every existing test keeps
+working unchanged — only the internals changed from "append to a local
+list" to "call an MCP tool".
 """
 from __future__ import annotations
 
-import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
 from typing import List, Optional
+
+from .mcp_client import get_client
 
 
 @dataclass
@@ -36,16 +31,15 @@ class DecisionRecord:
     source_ref: Optional[str]
     adverse_action: bool
     policy_clause: Optional[str]
-    created_at: datetime
+    created_at: str  # ISO 8601 string, as returned by the server
+
+
+def _row_to_record(row: dict) -> DecisionRecord:
+    return DecisionRecord(**row)
 
 
 class DecisionLedger:
-    """Append-only ledger. One instance per claim in this POC (see
-    pipeline.py); a real deployment would key this by product+domain in a
-    shared table instead, same as the schema pattern this mirrors."""
-
-    def __init__(self) -> None:
-        self._rows: List[DecisionRecord] = []
+    """Thin wrapper — every method is one MCP tool call. No local state."""
 
     def record(
         self,
@@ -64,43 +58,42 @@ class DecisionLedger:
         policy_clause: Optional[str] = None,
         product: str = "claims-workflow-v2-poc",
     ) -> DecisionRecord:
-        row = DecisionRecord(
-            id=str(uuid.uuid4()),
-            product=product,
-            domain=domain,
-            claim_id=claim_id,
-            question=question,
-            recommendation=recommendation,
-            reasoning=reasoning,
-            confidence=confidence,
-            alternatives=alternatives or [],
-            risks=risks or [],
-            model_version=model_version,
-            source_ref=source_ref,
-            adverse_action=adverse_action,
-            policy_clause=policy_clause,
-            created_at=datetime.now(timezone.utc),
+        row = get_client().call_tool(
+            "record_ledger_decision",
+            {
+                "domain": domain,
+                "question": question,
+                "recommendation": recommendation,
+                "reasoning": reasoning,
+                "confidence": confidence,
+                "claim_id": claim_id,
+                "alternatives": alternatives or [],
+                "risks": risks or [],
+                "model_version": model_version,
+                "source_ref": source_ref,
+                "adverse_action": adverse_action,
+                "policy_clause": policy_clause,
+                "product": product,
+            },
         )
-        self._rows.append(row)
-        return row
+        return _row_to_record(row)
 
     def all(self) -> List[DecisionRecord]:
-        return list(self._rows)
+        result = get_client().call_tool("get_audit_trail", {})
+        return [_row_to_record(r) for r in result["rows"]]
 
     def for_claim(self, claim_id: str) -> List[DecisionRecord]:
-        return [r for r in self._rows if r.claim_id == claim_id]
+        result = get_client().call_tool("get_audit_trail", {"claim_id": claim_id})
+        return [_row_to_record(r) for r in result["rows"]]
 
     def adverse_action_letter(self, claim_id: str) -> Optional[dict]:
-        """Fix 3's concrete deliverable: draft an adverse-action letter from
-        the specific ledger row that produced the denial, citing the exact
-        policy clause — not a generic 'claim denied' message."""
         rows = [r for r in self.for_claim(claim_id) if r.adverse_action]
         if not rows:
             return None
         row = rows[-1]
         return {
             "claim_id": claim_id,
-            "decided_at": row.created_at.isoformat(),
+            "decided_at": row.created_at,
             "reason": row.recommendation,
             "policy_clause": row.policy_clause,
             "explanation": "; ".join(row.reasoning),

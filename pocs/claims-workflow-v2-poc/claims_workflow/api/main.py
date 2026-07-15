@@ -144,7 +144,7 @@ def audit_trail(claim_id: str) -> List[dict]:
             "model_version": r.model_version,
             "adverse_action": r.adverse_action,
             "policy_clause": r.policy_clause,
-            "created_at": r.created_at.isoformat(),
+            "created_at": r.created_at,
         }
         for r in ledger.for_claim(claim_id)
     ]

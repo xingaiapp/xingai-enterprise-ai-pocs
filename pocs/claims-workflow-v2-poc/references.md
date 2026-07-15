@@ -4,12 +4,15 @@
 
 - EN: [Redesigning the Agentic Claims Workflow: Fraud Sequencing, Escalation Routing, and Compliance Audit](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-14-claims-workflow-redesign-fraud-routing-audit.md) — this POC's direct design source; every fix implemented here maps to a section there
 - 中文: [重新设计理赔工作流](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-14-claims-workflow-redesign-fraud-routing-audit.zh.md)
+- EN: [Third-Party MCP Access: API Key or OAuth 2.1? A Decision Framework](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-15-third-party-mcp-auth-api-key-vs-oauth2.md) — why Phase 1 uses a static service token and how scopes stay OAuth-ready
+- 中文: [第三方 MCP 访问——用 API Key 还是 OAuth 2.1?](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-15-third-party-mcp-auth-api-key-vs-oauth2.zh.md)
 - [Claims Settlement Workflow v2 diagram](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/assets/ARCHITECTURE-DIAGRAMS.md#claims-settlement-workflow-v2-xingai-corrected-design)
 - `xingai-engineering-system/patterns/decision-ledger-schema.md` — the shared schema `ledger.py` implements
 
 ## XingAI ADRs & Platform
 
 - [ADR-008: Claims Workflow v2 POC](../../docs/adr/008-claims-workflow-v2-poc.md) · [中文](../../docs/adr/008-claims-workflow-v2-poc.zh.md)
+- [ADR-009: MCP tool access, LLM agents, LangGraph supervisor](../../docs/adr/009-claims-workflow-v2-mcp-multiagent.md) · [中文](../../docs/adr/009-claims-workflow-v2-mcp-multiagent.zh.md)
 - [ADR-006: Claims MCP OAuth POC — real auth, not a placeholder](../../docs/adr/006-claims-mcp-oauth-poc-real-auth.md)
 - [ADR-007: Claims Partner API MCP POC — full API coverage, auth deferred](../../docs/adr/007-claims-partner-api-mcp-poc-full-coverage.md)
 - [POC Standards](../../docs/POC-STANDARDS.md)

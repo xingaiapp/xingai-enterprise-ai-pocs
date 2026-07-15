@@ -1,6 +1,6 @@
 # XingAI Enterprise AI POCs
 
-**Version:** 0.5.0
+**Version:** 0.5.1
 
 Runnable proof-of-concept projects for enterprise AI decision systems and architecture patterns.
 
@@ -28,7 +28,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 | [Claims Multi-Agent RAG](pocs/claims-multiagent-rag-poc/) | Supervisor + RAG + citations + human-in-the-loop | Runnable · Phases 1–6 | Insurance / enterprise RAG demo |
 | [Claims MCP OAuth POC](pocs/claims-mcp-oauth-poc/) | Real OAuth 2.1 + PKCE + JWT auth, two-wall authorization, Review→Adjudicate | Runnable · Phase 1 | [MCP in Production](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-11-mcp-in-production-robinhood-case.md), [OAuth PKCE Lab](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/guides/2026-07-12-mcp-oauth-pkce-lab.md) |
 | [Claims Partner API MCP POC](pocs/claims-partner-api-mcp-poc/) | Full OpenAPI-to-MCP tool coverage (18 tools/7 domains), auth deferred | Runnable · Phase 1 | [MCP API Coverage vs. Workflow Tools](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-13-mcp-api-coverage-vs-workflow-tools.md) |
-| [Claims Workflow v2 POC](pocs/claims-workflow-v2-poc/) | Split fraud triage/scoring, Case Resolution Router, cross-cutting compliance audit trail | Runnable · Phase 1 | [Redesigning the Agentic Claims Workflow](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-14-claims-workflow-redesign-fraud-routing-audit.md) |
+| [Claims Workflow v2 POC](pocs/claims-workflow-v2-poc/) | Split fraud triage/scoring, Case Resolution Router, compliance audit trail; Phase 1 MCP data boundary | Runnable · Phase 1 (+ ADR-009 MCP) | [Redesigning the Agentic Claims Workflow](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-14-claims-workflow-redesign-fraud-routing-audit.md), [Third-Party MCP Auth](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-15-third-party-mcp-auth-api-key-vs-oauth2.md) |
 | [Event Bus AI Review](pocs/event-bus-ai-review/) | Event-driven AI decisions | Architecture Design Only | Enterprise AI decision systems |
 | Human-in-the-Loop Decision | Approval workflow | Planned | Human approval layers |
 | Memory Layer Demo | User + organization memory | Planned | Memory architectures |
@@ -74,6 +74,11 @@ See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md) and [`docs/adr/README.md`](
 See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for contribution guidelines.
 
 ## Version Notes
+
+### 0.5.1
+
+- **Claims Workflow v2 Phase 1 MCP boundary (ADR-009)** — policy coverage, decision ledger, and payment settlement move behind `mcp_server/` (JSON-RPC `/mcp` over FastAPI) with four tools; workflow agents call via `mcp_client.py` (in-process ASGI by default). Static internal service token for now; scopes pre-aligned for later OAuth (see third-party MCP auth design article).
+- **ADR-009** documents Phase 1 (done) plus planned Phase 2 LLM agents and Phase 3 LangGraph supervisor.
 
 ### 0.5.0
 

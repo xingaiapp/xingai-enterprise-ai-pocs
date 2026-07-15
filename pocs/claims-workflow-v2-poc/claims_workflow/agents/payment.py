@@ -2,19 +2,14 @@
 
 Idempotent by construction, same non-negotiable requirement referenced in
 the design article and already enforced in this repo's
-claims-partner-api-mcp-poc: a payment write is keyed by an idempotency key
-derived from the claim, and replaying it returns the original settlement
-instead of paying twice.
+claims-partner-api-mcp-poc. Per ADR-009 Phase 1, the settlement store now
+lives in mcp_server.store, reached via the create_payment MCP tool.
 """
 from __future__ import annotations
 
 from ..ledger import DecisionLedger
+from ..mcp_client import get_client
 from ..models import Claim
-
-# In-memory idempotency store, module-level so a resumed/retried claim run
-# shares it — mirrors the "what actually happened" concern the design
-# article calls out. A real deployment persists this in the payments table.
-_SETTLEMENTS: dict = {}
 
 
 def _idempotency_key(claim: Claim) -> str:
@@ -23,11 +18,18 @@ def _idempotency_key(claim: Claim) -> str:
 
 def run_payment(claim: Claim, ledger: DecisionLedger) -> dict:
     key = _idempotency_key(claim)
+    amount = claim.approved_amount if claim.approved_amount is not None else (
+        claim.damage_cost if claim.damage_cost is not None else claim.reported_amount
+    )
 
-    if key in _SETTLEMENTS:
-        record = _SETTLEMENTS[key]
-        claim.status = "paid"
-        claim.settlement = record
+    result = get_client().call_tool(
+        "create_payment", {"claim_id": claim.claim_id, "amount": amount, "idempotency_key": key}
+    )
+    record = result["record"]
+    claim.status = "paid"
+    claim.settlement = record
+
+    if result["idempotent"]:
         ledger.record(
             domain="payment",
             question=f"Has claim {claim.claim_id} already been settled?",
@@ -36,36 +38,22 @@ def run_payment(claim: Claim, ledger: DecisionLedger) -> dict:
             confidence=1.0,
             claim_id=claim.claim_id,
         )
-        return record
+    else:
+        ledger.record(
+            domain="payment",
+            question=f"What amount should be settled for claim {claim.claim_id}?",
+            recommendation=f"settled:${record['amount']}",
+            reasoning=[f"idempotency key {key} written once", f"amount source={'approved_amount' if claim.approved_amount is not None else 'damage_cost/reported_amount'}"],
+            confidence=0.95,
+            claim_id=claim.claim_id,
+        )
 
-    amount = claim.approved_amount if claim.approved_amount is not None else (
-        claim.damage_cost if claim.damage_cost is not None else claim.reported_amount
-    )
-    from datetime import datetime, timezone
-
-    record = {
-        "idempotency_key": key,
-        "claim_id": claim.claim_id,
-        "amount": amount,
-        "settled_at": datetime.now(timezone.utc).isoformat(),
-    }
-    _SETTLEMENTS[key] = record
-    claim.status = "paid"
-    claim.settlement = record
-
-    ledger.record(
-        domain="payment",
-        question=f"What amount should be settled for claim {claim.claim_id}?",
-        recommendation=f"settled:${amount}",
-        reasoning=[f"idempotency key {key} written once", f"amount source={'approved_amount' if claim.approved_amount is not None else 'damage_cost/reported_amount'}"],
-        confidence=0.95,
-        claim_id=claim.claim_id,
-    )
     return record
 
 
 def reset_settlements_for_tests() -> None:
-    """Test-only helper — the module-level store otherwise persists across
-    test cases in the same process, same as it would across requests in a
-    real (in-memory) deployment."""
-    _SETTLEMENTS.clear()
+    """Kept for backward compatibility with existing test imports — now
+    delegates to mcp_server's store reset instead of clearing a local dict."""
+    from mcp_server import store
+
+    store.reset_all_for_tests()
