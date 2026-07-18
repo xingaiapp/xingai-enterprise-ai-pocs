@@ -1,6 +1,6 @@
 # XingAI Enterprise AI POCs
 
-**Version:** 0.7.1
+**Version:** 0.8.1
 
 Runnable proof-of-concept projects for enterprise AI decision systems and architecture patterns.
 
@@ -29,6 +29,7 @@ This repository pairs with [xingai-enterprise-ai-design](https://github.com/xing
 | [Claims MCP OAuth POC](pocs/claims-mcp-oauth-poc/) | Real OAuth 2.1 + PKCE + JWT auth, two-wall authorization, Review→Adjudicate | Runnable · Phase 1 | [MCP in Production](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-11-mcp-in-production-robinhood-case.md), [OAuth PKCE Lab](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/guides/2026-07-12-mcp-oauth-pkce-lab.md) |
 | [Claims Partner API MCP POC](pocs/claims-partner-api-mcp-poc/) | Full OpenAPI-to-MCP tool coverage (18 tools/7 domains), auth deferred | Runnable · Phase 1 | [MCP API Coverage vs. Workflow Tools](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-13-mcp-api-coverage-vs-workflow-tools.md) |
 | [Claims Workflow v2 POC](pocs/claims-workflow-v2-poc/) | Split fraud triage/scoring, Case Resolution Router, compliance audit trail; MCP data boundary, LLM agents + RAG, LangGraph supervisor | Runnable · Phase 1+2+3 (ADR-009) | [Redesigning the Agentic Claims Workflow](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-14-claims-workflow-redesign-fraud-routing-audit.md), [Third-Party MCP Auth](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-15-third-party-mcp-auth-api-key-vs-oauth2.md) |
+| [LLM Guardrails & Monitoring POC](pocs/llm-guardrails-monitoring-poc/) | 12-step Plan→Build→Validate→Operate demo with XingAI walls (evidence RAG, MCP two-wall, Agent Run trace, ledger) | Runnable · Phase 1 (ADR-010) | [Loop Engineering](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-03-beyond-prompt-engineering-loop-engineering.md), [Agent Governance](https://github.com/xingaiapp/xingai-enterprise-ai-design/blob/main/articles/2026-07-05-agent-governance-reference-architecture.md) |
 | [Event Bus AI Review](pocs/event-bus-ai-review/) | Event-driven AI decisions | Architecture Design Only | Enterprise AI decision systems |
 | Human-in-the-Loop Decision | Approval workflow | Planned | Human approval layers |
 | Memory Layer Demo | User + organization memory | Planned | Memory architectures |
@@ -43,6 +44,7 @@ pocs/
   claims-mcp-oauth-poc/
   claims-partner-api-mcp-poc/
   claims-workflow-v2-poc/
+  llm-guardrails-monitoring-poc/
   event-bus-ai-review/
   human-in-the-loop-decision/
   memory-layer-demo/
@@ -74,6 +76,14 @@ See [`docs/POC-STANDARDS.md`](docs/POC-STANDARDS.md) and [`docs/adr/README.md`](
 See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for contribution guidelines.
 
 ## Version Notes
+
+### 0.8.1
+
+- Docs pack for LLM Guardrails POC: ADR-010 follow-ups + Related Design Docs / references now link the 2026-07-17 enterprise design article and tech blog.
+
+### 0.8.0
+
+- **LLM Guardrails & Monitoring POC** (`pocs/llm-guardrails-monitoring-poc/`, ADR-010) — runnable 12-step Plan→Build→Validate→Operate demo with XingAI corrections (evidence sufficiency, untrusted observations, MCP two-wall tool block, Agent Run trace, Decision Ledger). FastAPI on port 8020; mock model; UI sample probes for happy path / injection / risky tool / weak evidence.
 
 ### 0.7.1
 

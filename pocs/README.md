@@ -7,6 +7,7 @@ Runnable proof-of-concept projects live here.
 | Folder | Pattern | Goal |
 |---|---|---|
 | [`multi-agent-lab`](multi-agent-lab/) | Orchestrator + specialist handoffs | Demo Idea → Research → Product → Tech → Critic with trace timeline |
+| [`llm-guardrails-monitoring-poc`](llm-guardrails-monitoring-poc/) | 12-step Plan→Build→Validate→Operate | Demo every guardrail/monitor step with XingAI walls (MCP two-wall, evidence stop, ledger) |
 | `event-bus-ai-review` | Event-driven AI decisions | Decouple AI analysis, compliance review, human approval, and audit logging |
 | `human-in-the-loop-decision` | Approval workflow | Package AI recommendations for human review before action |
 | `memory-layer-demo` | Memory architecture | Separate short-term, user-level, and organization-level memory |

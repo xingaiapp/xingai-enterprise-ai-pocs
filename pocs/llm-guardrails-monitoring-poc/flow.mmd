@@ -1,0 +1,18 @@
+# LLM Guardrails & Monitoring POC — component flow
+
+flowchart TD
+  UI[Demo UI / POST /demo/run] --> P1[1 Use Case]
+  P1 --> P2[2 Risks and Policy]
+  P2 --> B3[3 Model by task class]
+  B3 --> B4[4 Evidence RAG]
+  B4 --> B5[5 Prompt and contract]
+  B5 --> B6[6 Input guards all observations]
+  B6 -->|blocked| STOP1[Fail closed]
+  B6 -->|ok| B7[7 MCP two-wall tools]
+  B7 -->|blocked| STOP2[Fail closed]
+  B7 -->|ok| V8[8 Output guards]
+  V8 --> V9[9 Agent Run trace]
+  V9 --> V10[10 Eval and red-team]
+  V10 --> O11[11 Deploy controls continuous]
+  O11 --> O12[12 Iterate and ledger]
+  O12 --> OUT[answered / escalated / blocked]

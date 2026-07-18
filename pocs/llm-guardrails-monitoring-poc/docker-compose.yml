@@ -1,0 +1,5 @@
+services:
+  guardrails-poc:
+    build: ./backend
+    ports:
+      - "8020:8020"
